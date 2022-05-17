@@ -1,6 +1,3 @@
-/**
- * 
- */
 package randsampFM.featureModel;
 
 import de.neominik.uvl.ast.*;
