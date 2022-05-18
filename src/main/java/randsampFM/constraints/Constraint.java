@@ -9,7 +9,13 @@ import org.javatuples.Pair;
 import java.util.Set;
 
 public abstract class Constraint {
+  
+  /** Fix the given feature, and returns the new constraint, and a boolean telling if the constraint was modified or not */
+  public abstract Pair<Boolean,Constraint> fixVariable(final Feature feature, final boolean value);
+  /** Returns all the variables of the constraint */
+  public abstract Set<Feature> getVariables();
 
+  /** Create the constraint from an UVLModel constraint. Depending on the type of the constraint, creates the right class. */
   public static Constraint fromUVLConstraint(final Object constraint) {
     if (constraint instanceof Not) {
       Not notCstr = (Not) constraint;
@@ -43,9 +49,4 @@ public abstract class Constraint {
       }
     }
   }
-  
-  /** Fix the given feature, and returns the new constraint, and a boolean telling if the constraint was modified or not */
-  public abstract Pair<Boolean,Constraint> fixVariable(final Feature feature, final boolean value);
-  /** Returns all the variables of the constraint */
-  public abstract Set<Feature> getVariables();
 }

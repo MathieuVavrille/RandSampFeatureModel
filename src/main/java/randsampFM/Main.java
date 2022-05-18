@@ -115,7 +115,7 @@ public final class Main implements Runnable {
       if(nbSamples>0) {
         System.out.println("SAMPLING");
         for(long i=1; i<=nbSamples; i++) {
-          System.out.println("[" + i + "]:" + fm.sample());
+          System.out.println("[" + i + "]:" + fm.sample(generator));
         }
         System.out.println("Done");
       }
@@ -149,7 +149,7 @@ public final class Main implements Runnable {
 
   private FeatureModel uvlModeltoFM(final UVLModel uvlmodel){
     de.neominik.uvl.ast.Feature rootFeature = Arrays.asList(uvlmodel.getRootFeatures()).stream().findFirst().get();
-    return FeatureModel.parseFeatureModel(rootFeature, generator);
+    return FeatureModel.parseFeatureModel(rootFeature);
   }
 	
   private FeatureModel parseAndConvert(final String filename) { // mainly intended to the benchmark
@@ -181,7 +181,7 @@ public final class Main implements Runnable {
       // ArrayList full of zeros
 			
       for(int i = 0; i < nbOfSamples; i++) {
-        Conf tmp = fm.sample();
+        Conf tmp = fm.sample(generator);
         int index = intToconf.get(tmp);
         rawData.set(index, rawData.get(index)+1);
       }
@@ -196,7 +196,7 @@ public final class Main implements Runnable {
     StopWatch watch = new StopWatch();
     watch.start();
     for(long i = 0 ; i < nbSamples; i++) {
-      fm.sample();
+      fm.sample(generator);
     }
     watch.stop();
     return watch.getTime();
