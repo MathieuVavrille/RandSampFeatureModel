@@ -1,11 +1,36 @@
-package randsampFM;
+package randsampFM.constraints;
 
-public class AndCstr extends Constraint {
-  private final Constraint left;
-  private final Constraint right;
+import randsampFM.types.Feature;
+
+import org.javatuples.Pair;
+
+import java.util.Set;
+
+public class AndCstr extends BinaryConstraint {
   
-  public AndCstr(final Constraint left, final Constraint right) {
-    this.left = left;
-    this.right = rigth;
+  private AndCstr(final Constraint left, final Constraint right) {
+    super(left,right);
+  }
+
+  public static Constraint of(final Constraint left, final Constraint right) {
+    if (left instanceof FalseCstr || right instanceof FalseCstr)
+      return new FalseCstr();
+    else if (left instanceof TrueCstr)
+      return right;
+    else if (right instanceof TrueCstr)
+      return left;
+    return new AndCstr(left,right);
+  }
+
+  @Override
+  public Pair<Boolean,Constraint> fixVariable(final Feature feature) {
+    Pair<Boolean, Constraint> leftFix = left.fixVariable(feature);
+    Pair<Boolean, Constraint> rightFix = right.fixVariable(feature);
+    return new Pair<Boolean, Constraint>(leftFix.getValue0() || rightFix.getValue0(), AndCstr.of(leftFix.getValue1(),rightFix.getValue1()));
+  }
+
+  @Override
+  public String toString() {
+    return "AND("+left.toString()+","+right.toString()+")";
   }
 }

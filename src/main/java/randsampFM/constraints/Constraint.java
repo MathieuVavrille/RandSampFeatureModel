@@ -1,33 +1,35 @@
 package randsampFM.constraints;
 
-import randsampFM.types;
+import randsampFM.types.Feature;
 
 import de.neominik.uvl.ast.*;
 
 import org.javatuples.Pair;
 
+import java.util.Set;
+
 public abstract class Constraint {
 
-  public static fromUVLConstraint(final Object constraint) {
+  public static Constraint fromUVLConstraint(final Object constraint) {
     if (constraint instanceof Not) {
       Not notCstr = (Not) constraint;
-      return new NotCstr(fromUVLConstraint(notCstr.child));
+      return NotCstr.of(fromUVLConstraint(notCstr.getChild()));
     }
     else if (constraint instanceof And) {
       And andCstr = (And) constraint;
-      return new AndCstr(fromUVLConstraint(andCstr.left), fromUVLConstraint(andCstr.right));
+      return AndCstr.of(fromUVLConstraint(andCstr.getLeft()), fromUVLConstraint(andCstr.getRight()));
     }
     else if (constraint instanceof Or) {
       Or orCstr = (Or) constraint;
-      return new OrCstr(fromUVLConstraint(orCstr.left), fromUVLConstraint(orCstr.right));
+      return OrCstr.of(fromUVLConstraint(orCstr.getLeft()), fromUVLConstraint(orCstr.getRight()));
     }
     else if (constraint instanceof Impl) {
       Impl implCstr = (Impl) constraint;
-      return new ImplCstr(fromUVLConstraint(implCstr.left), fromUVLConstraint(implCstr.right));
+      return ImplCstr.of(fromUVLConstraint(implCstr.getLeft()), fromUVLConstraint(implCstr.getRight()));
     }
     else if (constraint instanceof Equiv) {
       Equiv equivCstr = (Equiv) constraint;
-      return new EquivCstr(fromUVLConstraint(equivCstr.left), fromUVLConstraint(equivCstr.right));
+      return EquivCstr.of(fromUVLConstraint(equivCstr.getLeft()), fromUVLConstraint(equivCstr.getRight()));
     }
     else { // It is a string
       String stringCstr = (String) constraint; // If bug here, then you didn't give a constraint from UVL
@@ -37,7 +39,7 @@ public abstract class Constraint {
       case "false":
         return new FalseCstr();
       default:
-        return new LitteralCstr(stringCstr);
+        return new LitteralCstr(new Feature(stringCstr));
       }
     }
   }
@@ -46,7 +48,4 @@ public abstract class Constraint {
   public abstract Pair<Boolean,Constraint> fixVariable(final Feature feature);
   /** Returns all the variables of the constraint */
   public abstract Set<Feature> getVariables();
-    
-  public isTrue() { return False; }
-  public isFalse() { return False; }
 }
