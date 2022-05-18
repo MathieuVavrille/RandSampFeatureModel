@@ -14,9 +14,9 @@ public class LitteralCstr extends Constraint {
   }
 
   @Override
-  public Pair<Boolean,Constraint> fixVariable(final Feature feature) {
+  public Pair<Boolean,Constraint> fixVariable(final Feature feature, final boolean value) {
     if (feature.equals(litteral))
-      return new Pair<Boolean, Constraint>(true, new TrueCstr());
+      return new Pair<Boolean, Constraint>(true, value ? new TrueCstr() : new FalseCstr());
     else
       return new Pair<Boolean, Constraint>(false, this);
   }

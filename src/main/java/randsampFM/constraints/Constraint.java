@@ -45,7 +45,7 @@ public abstract class Constraint {
   }
   
   /** Fix the given feature, and returns the new constraint, and a boolean telling if the constraint was modified or not */
-  public abstract Pair<Boolean,Constraint> fixVariable(final Feature feature);
+  public abstract Pair<Boolean,Constraint> fixVariable(final Feature feature, final boolean value);
   /** Returns all the variables of the constraint */
   public abstract Set<Feature> getVariables();
 }

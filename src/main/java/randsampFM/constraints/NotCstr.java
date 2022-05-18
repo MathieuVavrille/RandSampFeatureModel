@@ -25,8 +25,8 @@ public class NotCstr extends Constraint {
   }
 
   @Override
-  public Pair<Boolean,Constraint> fixVariable(final Feature feature) {
-    Pair<Boolean, Constraint> fix = child.fixVariable(feature);
+  public Pair<Boolean,Constraint> fixVariable(final Feature feature, final boolean value) {
+    Pair<Boolean, Constraint> fix = child.fixVariable(feature, value);
     return new Pair<Boolean, Constraint>(fix.getValue0(), NotCstr.of(fix.getValue1()));
   }
 

@@ -32,9 +32,9 @@ public class ImplCstr extends BinaryConstraint {
   }
 
   @Override
-  public Pair<Boolean,Constraint> fixVariable(final Feature feature) {
-    Pair<Boolean, Constraint> leftFix = left.fixVariable(feature);
-    Pair<Boolean, Constraint> rightFix = right.fixVariable(feature);
+  public Pair<Boolean,Constraint> fixVariable(final Feature feature, final boolean value) {
+    Pair<Boolean, Constraint> leftFix = left.fixVariable(feature, value);
+    Pair<Boolean, Constraint> rightFix = right.fixVariable(feature, value);
     return new Pair<Boolean, Constraint>(leftFix.getValue0() || rightFix.getValue0(), ImplCstr.of(leftFix.getValue1(),rightFix.getValue1()));
   }
 
