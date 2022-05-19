@@ -28,7 +28,7 @@ public final class FDXor extends FeatureDiagram{
   }
 	
   public static FDXor parse(String label, List<de.neominik.uvl.ast.Feature> rawChildren) {
-    return new FDXor(label, rawChildren.stream().map(x -> parseFeatureDiagram(x)).collect(Collectors.toList()));
+    return new FDXor(label, rawChildren.stream().map(x -> parse(x)).collect(Collectors.toList()));
   }
 
   @Override

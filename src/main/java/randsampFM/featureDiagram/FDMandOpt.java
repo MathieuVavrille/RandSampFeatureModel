@@ -35,8 +35,8 @@ public final class FDMandOpt extends FeatureDiagram {
   }
 	
   public static FDMandOpt parse(String label, List<de.neominik.uvl.ast.Feature> rawMandChildren , List<de.neominik.uvl.ast.Feature> rawOptChildren) {
-    return new FDMandOpt(label, rawMandChildren.stream().map(x -> parseFeatureDiagram(x)).collect(Collectors.toList()), 
-                         rawOptChildren.stream().map(x -> parseFeatureDiagram(x)).collect(Collectors.toList()));
+    return new FDMandOpt(label, rawMandChildren.stream().map(x -> parse(x)).collect(Collectors.toList()), 
+                         rawOptChildren.stream().map(x -> parse(x)).collect(Collectors.toList()));
   }
 
   @Override

@@ -1,4 +1,4 @@
-package randsampFM.featureModel;
+package randsampFM.featureDiagram;
 
 import randsampFM.types.*;
 
@@ -10,7 +10,7 @@ import java.util.Random;
 import java.util.List;
 import java.math.BigInteger;
 
-public class FDCard extends FeatureDiagram{
+public class FDCard extends FeatureDiagram {
 
   // TEMPORARY CLASS : TODO TOTALLY WRONG
   //private int lowerBound;

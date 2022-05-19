@@ -1,6 +1,6 @@
 package randsampFM;
 
-import randsampFM.featureModel.FeatureModel;
+import randsampFM.featureDiagram.FeatureDiagram;
 import randsampFM.types.Conf;
 import randsampFM.types.ConfSet;
 
@@ -89,7 +89,7 @@ public final class Main implements Runnable {
   public void run() {
     //System.out.println(path);
 		
-    FeatureModel fm = parseAndConvert(path);
+    FeatureDiagram fm = parseAndConvert(path);
 		
     if(samplesize > 0) {
       System.out.println("BENCHMARK MODE");
@@ -147,16 +147,16 @@ public final class Main implements Runnable {
     }
   }
 
-  private FeatureModel uvlModeltoFM(final UVLModel uvlmodel){
+  private FeatureDiagram uvlModeltoFM(final UVLModel uvlmodel){
     de.neominik.uvl.ast.Feature rootFeature = Arrays.asList(uvlmodel.getRootFeatures()).stream().findFirst().get();
-    return FeatureModel.parseFeatureModel(rootFeature);
+    return FeatureDiagram.parse(rootFeature);
   }
 	
-  private FeatureModel parseAndConvert(final String filename) { // mainly intended to the benchmark
+  private FeatureDiagram parseAndConvert(final String filename) { // mainly intended to the benchmark
     return uvlModeltoFM(loadModel(filename));
   }
 	
-  /*private List<Integer> benchmark(final FeatureModel fm, final long nbOfSamples){
+  /*private List<Integer> benchmark(final FeatureDiagram fm, final long nbOfSamples){
     BigInteger nbConf = fm.count();
     final long threshold = 100000;
     final BigInteger bigThreshold = BigInteger.valueOf(threshold);
@@ -192,7 +192,7 @@ public final class Main implements Runnable {
     return data;
     }*/
 	
-  public static long benchTimeSample(long nbSamples, FeatureModel fm) {
+  public static long benchTimeSample(long nbSamples, FeatureDiagram fm) {
     StopWatch watch = new StopWatch();
     watch.start();
     for(long i = 0 ; i < nbSamples; i++) {

@@ -28,7 +28,7 @@ public class FDOr extends FeatureDiagram {
   }
   
   public static FDOr parse(String label, List<de.neominik.uvl.ast.Feature> rawChildren) {
-    return new FDOr(label, rawChildren.stream().map(x -> parseFeatureDiagram(x)).collect(Collectors.toList()));
+    return new FDOr(label, rawChildren.stream().map(x -> parse(x)).collect(Collectors.toList()));
   }
 
   @Override

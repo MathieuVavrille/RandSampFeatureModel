@@ -76,7 +76,7 @@ public abstract class FeatureDiagram {
 
 
   /** Parse a Feature from uvl-parser, and create the associated classes */
-  public static FeatureDiagram parseFeatureDiagram(final de.neominik.uvl.ast.Feature feature) {
+  public static FeatureDiagram parse(final de.neominik.uvl.ast.Feature feature) {
     List<Group> groups = Arrays.asList(feature.getGroups()); // retrieves all the groups under the feature
     /* 0 -> OR
      * 1 -> XOR
@@ -110,7 +110,7 @@ public abstract class FeatureDiagram {
     int typeIndex = -1;
     long filteredTypes = nbTypes.stream().filter(y -> y > 0).count(); // how many different types ?
     if(filteredTypes > 1) { // Checks type consistency
-      throw new  UnsupportedOperationException("Types are not consistent -> Feature Model building aborted.");
+      throw new UnsupportedOperationException("Types are not consistent -> Feature Model building aborted.");
     }
     else {
       for(int i=0; i<4; i++) {
