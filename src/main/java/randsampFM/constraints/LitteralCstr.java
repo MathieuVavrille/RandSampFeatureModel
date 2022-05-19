@@ -14,9 +14,11 @@ public class LitteralCstr extends Constraint {
   }
 
   @Override
-  public Pair<Boolean,Constraint> fixVariable(final Feature feature, final boolean value) {
-    if (feature.equals(litteral))
-      return new Pair<Boolean, Constraint>(true, value ? new TrueCstr() : new FalseCstr());
+  public Pair<Boolean,Constraint> fixVariable(final Set<Feature> forced, final Set<Feature> forbidden) {
+    if (forced.contains(litteral))
+      return new Pair<Boolean, Constraint>(true, new TrueCstr());
+    else if (forbidden.contains(litteral))
+      return new Pair<Boolean, Constraint>(true, new FalseCstr());
     else
       return new Pair<Boolean, Constraint>(false, this);
   }
@@ -24,6 +26,15 @@ public class LitteralCstr extends Constraint {
   @Override
   public Set<Feature> getVariables() {
     return Set.of(litteral);
+  }
+
+  @Override
+  public Pair<Set<Feature>,Set<Feature>> forcedFeaturesForTrue() {
+    return new Pair<Set<Feature>,Set<Feature>>(Set.of(label),Set.of());
+  }
+  @Override
+  public Pair<Set<Feature>,Set<Feature>> forcedFeaturesForFalse() {
+    return new Pair<Set<Feature>,Set<Feature>>(Set.of(),Set.of(label));
   }
 
   @Override

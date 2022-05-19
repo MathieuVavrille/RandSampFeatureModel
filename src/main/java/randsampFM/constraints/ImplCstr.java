@@ -32,10 +32,25 @@ public class ImplCstr extends BinaryConstraint {
   }
 
   @Override
-  public Pair<Boolean,Constraint> fixVariable(final Feature feature, final boolean value) {
-    Pair<Boolean, Constraint> leftFix = left.fixVariable(feature, value);
-    Pair<Boolean, Constraint> rightFix = right.fixVariable(feature, value);
+  public Pair<Boolean,Constraint> fixVariable(final Set<Feature> forced, final Set<Feature> forbidden) {
+    Pair<Boolean, Constraint> leftFix = left.fixVariable(forced,forbidden);
+    Pair<Boolean, Constraint> rightFix = right.fixVariable(forced,forbidden);
     return new Pair<Boolean, Constraint>(leftFix.getValue0() || rightFix.getValue0(), ImplCstr.of(leftFix.getValue1(),rightFix.getValue1()));
+  }
+
+  @Override
+  public Pair<Set<Feature>,Set<Feature>> forcedFeaturesForTrue() {
+    return new Pair<Set<Feature>,Set<Feature>>(Set.of(),Set.of());
+  }
+  @Override
+  public Pair<Set<Feature>,Set<Feature>> forcedFeaturesForFalse() {
+    Pair<Set<Feature>,Set<Feature>> leftFeatures = left.forcedFeaturesForTrue();
+    Pair<Set<Feature>,Set<Feature>> rightFeatures = right.forcedFeaturesForFalse();
+    Set<Feature> leftForced = new HashSet<Feature>(leftFeatures.getValue0());
+    leftForced.addAll(rightFeatures.getValue0());
+    Set<Feature> leftForbidden = new HashSet<Feature>(leftFeatures.getValue1());
+    leftForbidden.addAll(rightFeatures.getValue1());
+    return Pair<Set<Feature>,Set<Feature>>(leftForced, leftForbidden);
   }
 
   @Override
