@@ -32,11 +32,11 @@ public class NotCstr extends Constraint {
 
   @Override
   public Pair<Set<Feature>,Set<Feature>> forcedFeaturesForTrue() {
-    return child.forcedFeatuersForFalse();
+    return child.forcedFeaturesForFalse();
   }
   @Override
   public Pair<Set<Feature>,Set<Feature>> forcedFeaturesForFalse() {
-    return child.forcedFeatuersForTrue();
+    return child.forcedFeaturesForTrue();
   }
 
   @Override

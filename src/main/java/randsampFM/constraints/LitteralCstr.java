@@ -5,6 +5,7 @@ import randsampFM.types.Feature;
 import org.javatuples.Pair;
 
 import java.util.Set;
+import java.util.HashSet;
 
 public class LitteralCstr extends Constraint {
   private final Feature litteral;
@@ -30,11 +31,11 @@ public class LitteralCstr extends Constraint {
 
   @Override
   public Pair<Set<Feature>,Set<Feature>> forcedFeaturesForTrue() {
-    return new Pair<Set<Feature>,Set<Feature>>(Set.of(label),Set.of());
+    return new Pair<Set<Feature>,Set<Feature>>(Set.of(litteral),Set.of());
   }
   @Override
   public Pair<Set<Feature>,Set<Feature>> forcedFeaturesForFalse() {
-    return new Pair<Set<Feature>,Set<Feature>>(Set.of(),Set.of(label));
+    return new Pair<Set<Feature>,Set<Feature>>(Set.of(),Set.of(litteral));
   }
 
   @Override

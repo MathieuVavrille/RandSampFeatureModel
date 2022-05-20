@@ -5,6 +5,7 @@ import randsampFM.types.Feature;
 import org.javatuples.Pair;
 
 import java.util.Set;
+import java.util.HashSet;
 
 /**
 00 | 1
@@ -50,7 +51,7 @@ public class ImplCstr extends BinaryConstraint {
     leftForced.addAll(rightFeatures.getValue0());
     Set<Feature> leftForbidden = new HashSet<Feature>(leftFeatures.getValue1());
     leftForbidden.addAll(rightFeatures.getValue1());
-    return Pair<Set<Feature>,Set<Feature>>(leftForced, leftForbidden);
+    return new Pair<Set<Feature>,Set<Feature>>(leftForced, leftForbidden);
   }
 
   @Override

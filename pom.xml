@@ -48,5 +48,10 @@
       <artifactId>javatuples</artifactId>
       <version>1.2</version>
     </dependency>
+    <dependency>
+      <groupId>org.choco-solver</groupId>
+      <artifactId>choco-solver</artifactId>
+      <version>4.10.8</version>
+    </dependency>
   </dependencies>
 </project>
