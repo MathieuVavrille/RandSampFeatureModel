@@ -1,19 +1,23 @@
 package randsampFM.constraints;
 
-import randsampFM.types.Feature;
+import randsampFM.types.*;
+
+import org.chocosolver.solver.variables.BoolVar;
+import org.chocosolver.solver.expression.discrete.relational.ReExpression;
 
 import org.javatuples.Pair;
 
 import java.util.Set;
+import java.util.Map;
 
-public class NotCstr extends Constraint {
-  private final Constraint child;
+public class NotCstr extends CrossConstraint {
+  private final CrossConstraint child;
   
-  private NotCstr(final Constraint child) {
+  private NotCstr(final CrossConstraint child) {
     this.child = child;
   }
 
-  public static Constraint of(final Constraint child) {
+  public static CrossConstraint of(final CrossConstraint child) {
     if (child instanceof TrueCstr)
       return new FalseCstr();
     else if (child instanceof FalseCstr)
@@ -25,9 +29,19 @@ public class NotCstr extends Constraint {
   }
 
   @Override
-  public Pair<Boolean,Constraint> fixVariable(final Set<Feature> forced, final Set<Feature> forbidden) {
-    Pair<Boolean, Constraint> fix = child.fixVariable(forced,forbidden);
-    return new Pair<Boolean, Constraint>(fix.getValue0(), NotCstr.of(fix.getValue1()));
+  public Pair<Boolean,CrossConstraint> fixVariable(final Set<Feature> forced, final Set<Feature> forbidden) {
+    Pair<Boolean, CrossConstraint> fix = child.fixVariable(forced,forbidden);
+    return new Pair<Boolean, CrossConstraint>(fix.getValue0(), NotCstr.of(fix.getValue1()));
+  }
+
+  @Override
+  public boolean isSatisfied(final Configuration configuration) {
+    return !child.isSatisfied(configuration);
+  }
+
+  @Override
+  public ReExpression getCPConstraint(final Map<Feature,BoolVar> featureToVar) {
+    return child.getCPConstraint(featureToVar).not();
   }
 
   @Override

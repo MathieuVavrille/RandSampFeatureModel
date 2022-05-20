@@ -2,10 +2,14 @@ package randsampFM.featureDiagram;
 
 import randsampFM.types.*;
 
+import org.chocosolver.solver.Model;
+import org.chocosolver.solver.variables.BoolVar;
+
 import org.javatuples.Triplet;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.stream.Collectors;
@@ -95,6 +99,18 @@ public final class FDXor extends FeatureDiagram{
       return new Triplet<BottomUpCase, FeatureDiagram, Set<Feature>>(BottomUpCase.MANDATORY_MODIFIED, new FDMandOpt(label, List.of(mandatoryFD), List.of()), newlyRemoved);
     }
   }
+
+  @Override
+  public BoolVar addConstraints(final Model model, final Map<Feature,BoolVar> featureToVar) {
+    BoolVar mainVar = model.boolVar(label.getName());
+    featureToVar.put(label, mainVar);
+    BoolVar[] childrenVars = new BoolVar[children.size()];
+    for (int i = 0; i < children.size(); i++) {
+      childrenVars[i] = children.get(i).addConstraints(model, featureToVar);
+    }
+    model.sum(childrenVars, "=", mainVar).post();
+    return mainVar;
+  }
   
   @Override
   public BigInteger count() {
@@ -111,8 +127,8 @@ public final class FDXor extends FeatureDiagram{
   }
 	
   @Override
-  public Conf sample(final Random random) {
-    Conf result = new Conf(Set.of(this.label));
+  public Configuration sample(final Random random) {
+    Configuration result = new Configuration(Set.of(this.label));
     result = result.union(this.choose(random).sample(random));
     return result;
   }
@@ -140,6 +156,16 @@ public final class FDXor extends FeatureDiagram{
       builder.append(" ");
     }
     builder.append(")");
+    return builder.toString();
+  }
+
+  @Override
+  public String generateGraphvizEdges() {
+    StringBuilder builder = new StringBuilder(label.getName() + "[shape=diamond];\n");
+    for (FeatureDiagram child : children) {
+      builder.append(label.getName() + " -> " + child.label.getName() + " [arrowhead=none];\n");
+      builder.append(child.generateGraphvizEdges());
+    }
     return builder.toString();
   }
 }

@@ -30,7 +30,7 @@ public class VarInConstraintStrategy extends AbstractStrategy<IntVar> {
         for (Propagator<IntVar> prop : cstr.getPropagators()) {
           for (IntVar var : prop.getVars()) {
             if (!var.isInstantiated()) // pick and uninstantiated variable
-              return makeIntDecision(var, var.getLB()); // LB is 0, var should be a BoolVar for the FM application
+              return makeIntDecision(var, var.getLB()); // LB is 0, var should be a IntVar for the FM application
           }
         }
       }

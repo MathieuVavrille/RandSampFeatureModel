@@ -4,6 +4,10 @@ import randsampFM.types.*;
 
 import org.javatuples.Triplet;
 
+import org.chocosolver.solver.Model;
+import org.chocosolver.solver.variables.BoolVar;
+
+import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Random;
@@ -28,31 +32,45 @@ public class FDCard extends FeatureDiagram {
 
   @Override
   public Set<Feature> getFeatures() {
-    Set<Feature> allFeatures = new HashSet<Feature>();
+    throw new UnsupportedOperationException("Not Implemented");
+    //Set<Feature> allFeatures = new HashSet<Feature>();
     /*for(FeatureDiagram child : children)
       allFeatures.addAll(child.getFeatures);*/
-    return allFeatures;
+    //return allFeatures;
   }
   
   @Override
   public Triplet<BottomUpCase, FeatureDiagram, Set<Feature>> fixFeatures(final Set<Feature> forced, final Set<Feature> forbidden) {
-    // TODO implement
-    return null;
+    throw new UnsupportedOperationException("Not Implemented");
+    //return null;
+  }
+
+  @Override
+  public BoolVar addConstraints(final Model model, final Map<Feature,BoolVar> featureToVar) {
+    throw new UnsupportedOperationException("Not Implemented");
   }
 
   @Override
   public BigInteger count() {
-    return BigInteger.ONE;
+    throw new UnsupportedOperationException("Not Implemented");
+    //return BigInteger.ONE;
   }
 
   @Override
   public ConfSet enumerate() {
-    return ConfSet.singletonCS(new Feature("TODO"));
+    throw new UnsupportedOperationException("Not Implemented");
+    //return ConfSet.singletonCS(new Feature("TODO"));
   }
 
   @Override
-  public Conf sample(final Random random) {
-    return new Conf();
+  public Configuration sample(final Random random) {
+    throw new UnsupportedOperationException("Not Implemented");
+    //return new Configuration();
+  }
+
+  @Override
+  public String generateGraphvizEdges() {
+    throw new UnsupportedOperationException("Not Implemented");
   }
 	
 }

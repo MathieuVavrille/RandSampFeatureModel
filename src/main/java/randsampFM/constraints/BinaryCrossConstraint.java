@@ -5,11 +5,11 @@ import randsampFM.types.Feature;
 import java.util.HashSet;
 import java.util.Set;
 
-public abstract class BinaryConstraint extends Constraint {
-  protected final Constraint left;
-  protected final Constraint right;
+public abstract class BinaryCrossConstraint extends CrossConstraint {
+  protected final CrossConstraint left;
+  protected final CrossConstraint right;
 
-  public BinaryConstraint(final Constraint left, final Constraint right) {
+  public BinaryCrossConstraint(final CrossConstraint left, final CrossConstraint right) {
     this.left = left;
     this.right = right;
   }

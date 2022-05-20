@@ -1,13 +1,17 @@
 package randsampFM.constraints;
 
-import randsampFM.types.Feature;
+import randsampFM.types.*;
+
+import org.chocosolver.solver.variables.BoolVar;
+import org.chocosolver.solver.expression.discrete.relational.ReExpression;
 
 import org.javatuples.Pair;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 
-public class LitteralCstr extends Constraint {
+public class LitteralCstr extends CrossConstraint {
   private final Feature litteral;
 
   public LitteralCstr(final Feature litteral) {
@@ -15,18 +19,28 @@ public class LitteralCstr extends Constraint {
   }
 
   @Override
-  public Pair<Boolean,Constraint> fixVariable(final Set<Feature> forced, final Set<Feature> forbidden) {
+  public Pair<Boolean,CrossConstraint> fixVariable(final Set<Feature> forced, final Set<Feature> forbidden) {
     if (forced.contains(litteral))
-      return new Pair<Boolean, Constraint>(true, new TrueCstr());
+      return new Pair<Boolean, CrossConstraint>(true, new TrueCstr());
     else if (forbidden.contains(litteral))
-      return new Pair<Boolean, Constraint>(true, new FalseCstr());
+      return new Pair<Boolean, CrossConstraint>(true, new FalseCstr());
     else
-      return new Pair<Boolean, Constraint>(false, this);
+      return new Pair<Boolean, CrossConstraint>(false, this);
   }
 
   @Override
   public Set<Feature> getVariables() {
     return Set.of(litteral);
+  }
+
+  @Override
+  public boolean isSatisfied(final Configuration configuration) {
+    return configuration.contains(litteral);
+  }
+
+  @Override
+  public ReExpression getCPConstraint(final Map<Feature,BoolVar> featureToVar) {
+    return featureToVar.get(litteral);
   }
 
   @Override

@@ -1,24 +1,29 @@
 package randsampFM.featureDiagram;
 
-import de.neominik.uvl.ast.Group;
-
 import randsampFM.types.*;
+import randsampFM.FMSampleCountEnum;
+
+import org.chocosolver.solver.Model;
+import org.chocosolver.solver.variables.BoolVar;
+
+import de.neominik.uvl.ast.Group;
 
 import org.javatuples.Triplet;
 
 import java.util.List;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Collections;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.NoSuchElementException;
 import java.util.Random;
+import java.io.IOException;
+import java.io.FileWriter;
 import java.math.BigInteger;
 
-public abstract class FeatureDiagram {
-	
-  protected final static int PRECISION = 100;
+public abstract class FeatureDiagram implements FMSampleCountEnum {
 	
   protected final Feature label;
   protected BigInteger nbConfigurations;
@@ -51,9 +56,6 @@ public abstract class FeatureDiagram {
    */
   public enum BottomUpCase {
     EMPTY, INCONSISTENT, MANDATORY_UNMODIFIED, MANDATORY_MODIFIED, UNMODIFIED, MODIFIED;
-    public static BottomUpCase getMandMod(final boolean isMandatory, final boolean isModified) {
-      return isMandatory ? (isModified ? MANDATORY_MODIFIED : MANDATORY_UNMODIFIED) : (isModified ? MODIFIED : UNMODIFIED);
-    }
   }
     
   /** Force some features to be in the FD or not to be in.
@@ -66,14 +68,36 @@ public abstract class FeatureDiagram {
    * - the newly removed features (to set to 0 in the constraints). This does not include the features in forbidden, only the ones propagated from forbidden features (or forced features in a XOR group). It is be `null` when the first element is INCONSISTENT
    */
   public abstract Triplet<BottomUpCase, FeatureDiagram, Set<Feature>> fixFeatures(final Set<Feature> forced, final Set<Feature> forbidden);
+
+  /** Adds the constraints of the tree in the CP model. Also create the BoolVars associated to each feature.
+   * @param model in which to add the constraints
+   * @param featureToVar the mapping from features to variables of the model
+   * @returns the BoolVar representing the root feature (also added in the map)
+   */
+  public abstract BoolVar addConstraints(final Model model, final Map<Feature,BoolVar> featureToVar);
+
   
-  /** nbConfigurations is set to count() the first time count() is called */
   public abstract BigInteger count();
   
   public abstract ConfSet enumerate();
   
-  public abstract Conf sample(final Random random);
+  public abstract Configuration sample(final Random random);
 
+  /** Generate a graphviz string representing the FD */
+  public abstract String generateGraphvizEdges();
+  public String generateGraphvizGraph() {
+    return "digraph {\n"+generateGraphvizEdges()+"}";
+  }
+  public void saveGraphvizToFile(final String fileName) {
+    try {
+      FileWriter myWriter = new FileWriter(fileName);
+      myWriter.write(generateGraphvizGraph());
+      myWriter.close();
+    }
+    catch (IOException e) {
+      System.out.println("Cannot write to file " + fileName);
+    }
+  }
 
   /** Parse a Feature from uvl-parser, and create the associated classes */
   public static FeatureDiagram parse(final de.neominik.uvl.ast.Feature feature) {
@@ -193,14 +217,9 @@ public abstract class FeatureDiagram {
       }
     }
     return List.copyOf(result);
-  }	
-	 
-  @Override
-  public String toString(){
-    if(this.label == null) {
-      return "null";
-    } else {
-      return label.toString();
-    }
+  }
+
+  public Feature getRootFeature() {
+    return label;
   }
 }

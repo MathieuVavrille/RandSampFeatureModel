@@ -1,7 +1,7 @@
 package randsampFM;
 
 import randsampFM.featureDiagram.FeatureDiagram;
-import randsampFM.types.Conf;
+import randsampFM.types.Configuration;
 import randsampFM.types.ConfSet;
 
 import de.neominik.uvl.ast.*;

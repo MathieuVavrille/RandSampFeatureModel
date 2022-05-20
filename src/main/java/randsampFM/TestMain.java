@@ -16,8 +16,9 @@ import java.util.ArrayList;
 
 public class TestMain {
   public static void main(String[] args) {
-    String path = "./models/truc.uvl";
+    String path = "./models/spark.uvl";
     FeatureModel fm = FeatureModel.parse(path);
-    
+    System.out.println(fm);
+    fm.removeConstraints();
   }
 }

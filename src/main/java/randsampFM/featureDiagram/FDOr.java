@@ -2,6 +2,9 @@ package randsampFM.featureDiagram;
 
 import randsampFM.types.*;
 
+import org.chocosolver.solver.Model;
+import org.chocosolver.solver.variables.BoolVar;
+
 import org.javatuples.Triplet;
 
 import java.math.BigDecimal;
@@ -9,6 +12,7 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Random;
@@ -91,6 +95,19 @@ public class FDOr extends FeatureDiagram {
   }
 
   @Override
+  public BoolVar addConstraints(final Model model, final Map<Feature,BoolVar> featureToVar) {
+    BoolVar mainVar = model.boolVar(label.getName());
+    featureToVar.put(label, mainVar);
+    BoolVar[] childrenVars = new BoolVar[children.size()];
+    for (int i = 0; i < children.size(); i++) {
+      childrenVars[i] = children.get(i).addConstraints(model, featureToVar);
+      childrenVars[i].le(mainVar).post();
+    }
+    model.sum(childrenVars, ">=", mainVar).post();
+    return mainVar;
+  }
+
+  @Override
   public BigInteger count() {
     if(this.nbConfigurations == null) {
       nbConfigurations = children.stream().map(x->x.count().add(BigInteger.ONE)).reduce(BigInteger.ONE, (a,b)-> a.multiply(b)).subtract(BigInteger.ONE);
@@ -100,17 +117,17 @@ public class FDOr extends FeatureDiagram {
 
   @Override
   public ConfSet enumerate() {
-    Conf rootConf = new Conf(Set.of(this.label)); 
+    Configuration rootConf = new Configuration(Set.of(this.label)); 
     ConfSet root = new ConfSet(Set.of(rootConf));
     ConfSet result = root.expansion(children.stream().map(x -> x.enumerate().union(ConfSet.emptyCS())).reduce(ConfSet.emptyCS(),(a,b) -> a.expansion(b)));
     return result.without(rootConf);
   }
 
   @Override
-  public Conf sample(final Random random) {
+  public Configuration sample(final Random random) {
     double draw; 
     double bound;
-    Conf result = new Conf();
+    Configuration result = new Configuration();
     while(result.isEmpty()) {
       for(FeatureDiagram fm : children) {
         bound = (BigDecimal.ONE).divide(new BigDecimal(fm.count().add(BigInteger.ONE)),PRECISION,RoundingMode.HALF_EVEN).doubleValue();
@@ -120,7 +137,7 @@ public class FDOr extends FeatureDiagram {
         }
       }
     }
-    return result.union(new Conf(Set.of(this.label)));
+    return result.union(new Configuration(Set.of(this.label)));
   }
 
   @Override
@@ -131,6 +148,16 @@ public class FDOr extends FeatureDiagram {
       builder.append(" ");
     }
     builder.append(")");
+    return builder.toString();
+  }
+
+  @Override
+  public String generateGraphvizEdges() {
+    StringBuilder builder = new StringBuilder(label.getName() + "[shape=circle];\n");
+    for (FeatureDiagram child : children) {
+      builder.append(label.getName() + " -> " + child.label.getName() + " [arrowhead=none];\n");
+      builder.append(child.generateGraphvizEdges());
+    }
     return builder.toString();
   }
 }

@@ -2,10 +2,14 @@ package randsampFM.featureDiagram;
 
 import randsampFM.types.*;
 
+import org.chocosolver.solver.Model;
+import org.chocosolver.solver.variables.BoolVar;
+
 import org.javatuples.Triplet;
 
 import java.math.BigInteger;
 import java.util.Set;
+import java.util.Map;
 import java.util.Random;
 
 public final class FDLeaf extends FeatureDiagram {
@@ -34,6 +38,13 @@ public final class FDLeaf extends FeatureDiagram {
   }
 
   @Override
+  public BoolVar addConstraints(final Model model, final Map<Feature,BoolVar> featureToVar) {
+    BoolVar mainVar = model.boolVar(label.getName());
+    featureToVar.put(label, mainVar);
+    return mainVar;
+  }
+
+  @Override
   public BigInteger count() {
     if(this.nbConfigurations == null) {
       this.nbConfigurations = BigInteger.ONE;
@@ -47,12 +58,17 @@ public final class FDLeaf extends FeatureDiagram {
   }
 
   @Override
-  public Conf sample(final Random random) {
-    return new Conf(Set.of(label));
+  public Configuration sample(final Random random) {
+    return new Configuration(Set.of(label));
   }
 
   @Override
   public String toString() {
     return label.toString();
+  }
+
+  @Override
+  public String generateGraphvizEdges() {
+    return "";
   }
 }

@@ -19,7 +19,7 @@ public class FeatureDiagramRecorder implements IMonitorSolution {
 
   private final FeatureDiagram mainFD;
   private final Map<Feature, BoolVar> featureToVar;
-  private final List<FeatureDiagram> reducedFDs = new ArrayList<FeatureDiagram>();
+  private final List<FeatureDiagram> recordedFDs = new ArrayList<FeatureDiagram>();
 
   public FeatureDiagramRecorder(final FeatureDiagram mainFD, final Map<Feature, BoolVar> featureToVar) {
     this.mainFD = mainFD;
@@ -46,6 +46,10 @@ public class FeatureDiagramRecorder implements IMonitorSolution {
       System.out.println(reducedFD.getValue2());
       throw new IllegalStateException("Either choco did not propagate enough, or FeatureDiagram.fixFeatures propagated too much");
     }
-    reducedFDs.add(reducedFD.getValue1());
+    recordedFDs.add(reducedFD.getValue1());
+  }
+
+  public List<FeatureDiagram> retrieveRecordedFDs() {
+    return recordedFDs;
   }
 }
