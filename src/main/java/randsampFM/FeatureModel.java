@@ -4,12 +4,14 @@ import randsampFM.types.*;
 import randsampFM.constraints.CrossConstraint;
 import randsampFM.featureDiagram.FeatureDiagram;
 import randsampFM.constraintsRemoval.*;
+import randsampFM.splittedFM.SplittedFDList;
 
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.Settings;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.variables.BoolVar;
+import org.chocosolver.solver.variables.IntVar;
 
 import de.neominik.uvl.ast.UVLModel;
 import de.neominik.uvl.UVLParser;
@@ -22,6 +24,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Random;
 import java.math.BigInteger;
 
@@ -54,8 +58,8 @@ public class FeatureModel implements FMSampleCountEnum {
     return new FeatureModel(FeatureDiagram.parse(uvlModel.getRootFeatures()[0]), crossConstraints);
   }
 
-  public List<FeatureDiagram> removeConstraints() {
-    featureDiagram.saveGraphvizToFile("./out_graphs/start.dot");
+  public SplittedFDList removeConstraints() {
+    //featureDiagram.saveGraphvizToFile("./out_graphs/start.dot");
     final Model model = new Model(Settings.init().setModelChecker(s -> true));
     final Map<Feature,BoolVar> featureToVar = new HashMap<Feature,BoolVar>();
     featureDiagram.addConstraints(model, featureToVar);
@@ -66,25 +70,19 @@ public class FeatureModel implements FMSampleCountEnum {
       modelCrossConstraints.add(currentModelCstr);
     }
     final Solver solver = model.getSolver();
-    solver.setSearch(new VarInConstraintStrategy(model.retrieveBoolVars(), modelCrossConstraints));
+    solver.setSearch(VarInConstraintStrategy.findConstraints(model.retrieveBoolVars(), new HashSet<IntVar>(featureToVar.values()), model.getCstrs()));
     FeatureDiagramRecorder recorder = new FeatureDiagramRecorder(featureDiagram, featureToVar);
     solver.plugMonitor(recorder);
     while (solver.solve()) {}
     List<FeatureDiagram> reducedFDs = recorder.retrieveRecordedFDs();
-    System.out.println("reduced");
-    int cpt = 0;
-    for (FeatureDiagram fd : reducedFDs) {
-      System.out.println(fd);
-      fd.saveGraphvizToFile("./out_graphs/out-"+(cpt++)+".dot");
-    }
-    return reducedFDs;
+    return new SplittedFDList(reducedFDs);
   }
 
   @Override
   public BigInteger count() {
     if(this.nbConfigurations == null) {
       if (crossConstraints.size() > 0)
-        throw new UnsupportedOperationException("Cannot count a feature model with cross constraints");
+        return BigInteger.valueOf(enumerate().size());
       else
         nbConfigurations = featureDiagram.count();
     }

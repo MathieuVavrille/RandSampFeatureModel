@@ -152,6 +152,16 @@ public class FDOr extends FeatureDiagram {
   }
 
   @Override
+  public String toUVL(final String baseIndentation) {
+    StringBuilder builder = new StringBuilder(baseIndentation + label + "\n");
+    builder.append("  " + baseIndentation + "or" + "\n");
+    for (FeatureDiagram child : children) {
+      builder.append(child.toUVL("    "+baseIndentation));
+    }
+    return builder.toString();
+  }
+
+  @Override
   public String generateGraphvizEdges() {
     StringBuilder builder = new StringBuilder(label.getName() + "[shape=circle];\n");
     for (FeatureDiagram child : children) {

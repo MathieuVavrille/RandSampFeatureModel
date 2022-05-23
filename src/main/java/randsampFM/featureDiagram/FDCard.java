@@ -72,5 +72,9 @@ public class FDCard extends FeatureDiagram {
   public String generateGraphvizEdges() {
     throw new UnsupportedOperationException("Not Implemented");
   }
-	
+
+  @Override
+  public String toUVL(final String indentation) {
+    throw new UnsupportedOperationException("Not Implemented");
+  }
 }

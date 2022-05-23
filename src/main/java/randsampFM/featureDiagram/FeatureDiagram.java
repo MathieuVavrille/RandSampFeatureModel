@@ -76,6 +76,9 @@ public abstract class FeatureDiagram implements FMSampleCountEnum {
    */
   public abstract BoolVar addConstraints(final Model model, final Map<Feature,BoolVar> featureToVar);
 
+  /** Outputs the uvl format */
+  public abstract String toUVL(final String indentation);
+
   
   public abstract BigInteger count();
   

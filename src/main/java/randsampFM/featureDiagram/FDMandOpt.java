@@ -245,6 +245,18 @@ public final class FDMandOpt extends FeatureDiagram {
   }
 
   @Override
+  public String toUVL(final String baseIndentation) {
+    StringBuilder builder = new StringBuilder(baseIndentation + label + "\n");
+    builder.append("  " + baseIndentation + "mandatory" + "\n");
+    for (FeatureDiagram mand : mandChildren)
+      builder.append(mand.toUVL("    "+baseIndentation));
+    builder.append("  " + baseIndentation + "optional" + "\n");
+    for (FeatureDiagram opt : optChildren)
+      builder.append(opt.toUVL("    "+baseIndentation));
+    return builder.toString();
+  }
+
+  @Override
   public String generateGraphvizEdges() {
     StringBuilder builder = new StringBuilder(label.getName() + "[shape=square];\n");
     for (FeatureDiagram mandChild : mandChildren) {

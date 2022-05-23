@@ -68,6 +68,11 @@ public final class FDLeaf extends FeatureDiagram {
   }
 
   @Override
+  public String toUVL(final String baseIndentation) {
+    return baseIndentation + label + "\n";
+  }
+
+  @Override
   public String generateGraphvizEdges() {
     return "";
   }

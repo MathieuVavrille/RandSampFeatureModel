@@ -12,19 +12,19 @@ import java.util.stream.Collectors;
 public class ConfSet {
 	
   private Set<Configuration> innerSet;
-  private String signature;
+  //private String signature;
 	
   public ConfSet() {
     innerSet = new HashSet<Configuration> ();
-    signature = "";
+    //signature = "";
   }
 	
   public ConfSet(Set<Configuration> newSet) {
     innerSet = Set.copyOf(newSet);
-    Object[] signatureList = innerSet.stream().map(x->x.getSignature()).sorted().toArray();
+    //Object[] signatureList = innerSet.stream().map(x->x.getSignature()).sorted().toArray();
 		
     // In order to concatenate efficiently
-    StringBuilder tmpSig = new StringBuilder("");
+    /*StringBuilder tmpSig = new StringBuilder("");
     Object c;
 		
     if(signatureList.length > 0) {
@@ -37,13 +37,7 @@ public class ConfSet {
     c = signatureList[signatureList.length-1];
     tmpSig = tmpSig.append("[" + (String) c).append("]");
 		
-    signature = tmpSig.toString();
-  }
-	
-  // Unused for now
-  private ConfSet(Set<Configuration> newSet, String signature){
-    innerSet = Set.copyOf(newSet);
-    this.signature = signature;
+    signature = tmpSig.toString();*/
   }
 	
   public ConfSet createConfSetfromRaw(final Set<Set<Feature>> newSet){ // otherwise, we can't have both ConfSet(Set<Set<Feature>> newSet) and ConfSet(Set<Conf> newSet) in the same time
@@ -76,19 +70,16 @@ public class ConfSet {
   }
 	
   public ConfSet expansion(ConfSet cs2) {
-		
     Set<Configuration> set2 = cs2.getInnerSet();
-    Set<Configuration> tmpNewSet = new HashSet<>(); // empty set
-    ConfSet newConfSet = new ConfSet();
-		
+    Configuration tmpNewSet;
+    Set<Configuration> newConfSet = new HashSet<Configuration>();
     for(Configuration c1 : innerSet) {
       for(Configuration c2: set2) {
-        tmpNewSet = Set.of(c1.union(c2));
-        newConfSet = newConfSet.union((new ConfSet(tmpNewSet)));
+        tmpNewSet = c1.union(c2);
+        newConfSet.add(tmpNewSet);
       }
     }
-		
-    return newConfSet;
+    return new ConfSet(newConfSet);
   }
 	
   public static ConfSet expansion(List<ConfSet> listCS) {
@@ -103,7 +94,7 @@ public class ConfSet {
 	
   public ConfSet without(final Configuration c) {
     if (!innerSet.contains(c)) {
-      return new ConfSet(innerSet, signature);
+      return new ConfSet(innerSet);
     }else {
       Set<Configuration> result = new HashSet<>();
       result.addAll(innerSet);
@@ -111,9 +102,5 @@ public class ConfSet {
       return new ConfSet(result);
     }
   }
-	
-  @Override
-  public String toString() {
-    return signature;
-  }
+  
 }
