@@ -36,6 +36,9 @@ public class FeatureDiagramRecorder implements IMonitorSolution {
       else if (entry.getValue().isInstantiatedTo(1))
         forced.add(entry.getKey());
     }
+    /*System.out.println("Solution");
+    System.out.println(forced);
+    System.out.println(forbidden);*/
     final Triplet<FeatureDiagram.BottomUpCase, FeatureDiagram, Set<Feature>> reducedFD = mainFD.fixFeatures(forced, forbidden);
     if (reducedFD.getValue2().size() > 0) {
       System.out.println("Error, I was able to extract more information");

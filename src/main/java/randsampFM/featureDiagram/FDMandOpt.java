@@ -127,8 +127,9 @@ public final class FDMandOpt extends FeatureDiagram {
         }
         newlyRemoved.addAll(returnData.getValue2());
       }
-      if (isUnmodified)
+      if (isUnmodified) {
         return new Triplet<BottomUpCase, FeatureDiagram, Set<Feature>>(propagateMandatory ? BottomUpCase.MANDATORY_UNMODIFIED : BottomUpCase.UNMODIFIED, this, newlyRemoved);
+      }
       else if (isEmpty) {
         for (FeatureDiagram mandChild : mandChildren)
           newlyRemoved.addAll(mandChild.getFeatures());
@@ -137,7 +138,7 @@ public final class FDMandOpt extends FeatureDiagram {
       }
       else {
         if (newMandatories.size() == 0 && newOptionals.size() == 0)
-          return new Triplet<BottomUpCase, FeatureDiagram, Set<Feature>>(BottomUpCase.MODIFIED, new FDLeaf(label), newlyRemoved);
+          return new Triplet<BottomUpCase, FeatureDiagram, Set<Feature>>(propagateMandatory ? BottomUpCase.MANDATORY_MODIFIED : BottomUpCase.MODIFIED, new FDLeaf(label), newlyRemoved);
         else
           return new Triplet<BottomUpCase, FeatureDiagram, Set<Feature>>(propagateMandatory ? BottomUpCase.MANDATORY_MODIFIED : BottomUpCase.MODIFIED, new FDMandOpt(label, newMandatories, newOptionals), newlyRemoved);
       }

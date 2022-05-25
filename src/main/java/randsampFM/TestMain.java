@@ -18,18 +18,32 @@ import java.math.BigInteger;
 
 public class TestMain {
   public static void main(String[] args) {
-    String path = "./models/jhipster.uvl";
-    FeatureModel fm = FeatureModel.parse(path);
-    //BigInteger nbConfigurations = fm.count();
+    String path = "../uvl-models/Feature_Models/Operating_Systems/KConfig/axTLS.uvl";
     long startTime = System.nanoTime();
+    FeatureModel fm = FeatureModel.parse(path);
+    long parseTime = System.nanoTime();
+    System.out.println((parseTime-startTime)/1000000);
+    //System.out.println(fm);
+    //BigInteger nbConfigurations = fm.count();
     SplittedFDList sfd = fm.removeConstraints();
+    long removeTime = System.nanoTime();
+    System.out.println((removeTime-parseTime)/1000000);
     BigInteger splittedNb = sfd.count();
+    long countTime = System.nanoTime();
+    System.out.println((countTime-removeTime)/1000000);
     System.out.println(sfd.count());
     //System.out.println(splittedNb.equals(nbConfigurations));
     System.out.println((System.nanoTime()-startTime)/1000000);
     System.out.println(sfd.countsRepartition());
-    //sfd.saveGraphvizToFolder("./graphviz_outputs/jhipster");
+    System.out.println(sfd.getFDs().size());
+    //System.out.println(sfd.enumerate());
+    //sfd.saveGraphvizToFolder("./graphviz_outputs/berkeleydb");
     //System.out.println(sfd.get(0).toUVL(""));
     //System.out.println(fm);
+    /*for (FeatureDiagram fd : sfd.getFDs()) {
+      System.out.println(fd);
+      System.out.println(fd.enumerate());
+      System.out.println(fd.count());
+      }*/
   }
 }

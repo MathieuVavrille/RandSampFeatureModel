@@ -63,6 +63,7 @@ public class FeatureModel implements FMSampleCountEnum {
     final Model model = new Model(Settings.init().setModelChecker(s -> true));
     final Map<Feature,BoolVar> featureToVar = new HashMap<Feature,BoolVar>();
     featureDiagram.addConstraints(model, featureToVar);
+    featureToVar.get(featureDiagram.getRootFeature()).eq(1).post();
     final List<Constraint> modelCrossConstraints = new ArrayList<Constraint>();
     for (CrossConstraint cstr : crossConstraints) {
       Constraint currentModelCstr = cstr.getCPConstraint(featureToVar).decompose(); // maybe use .extension()
@@ -70,7 +71,7 @@ public class FeatureModel implements FMSampleCountEnum {
       modelCrossConstraints.add(currentModelCstr);
     }
     final Solver solver = model.getSolver();
-    solver.setSearch(VarInConstraintStrategy.findConstraints(model.retrieveBoolVars(), new HashSet<IntVar>(featureToVar.values()), model.getCstrs()));
+    solver.setSearch(VarInConstraintStrategy.findConstraints(model.retrieveBoolVars(), new HashSet<IntVar>(featureToVar.values()), modelCrossConstraints, model.getCstrs()));
     FeatureDiagramRecorder recorder = new FeatureDiagramRecorder(featureDiagram, featureToVar);
     solver.plugMonitor(recorder);
     while (solver.solve()) {}

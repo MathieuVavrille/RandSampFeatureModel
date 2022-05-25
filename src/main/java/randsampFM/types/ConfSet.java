@@ -102,5 +102,9 @@ public class ConfSet {
       return new ConfSet(result);
     }
   }
-  
+
+  @Override
+  public String toString() {
+    return innerSet.toString();
+  }
 }
