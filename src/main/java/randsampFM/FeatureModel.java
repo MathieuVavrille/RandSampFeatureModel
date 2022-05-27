@@ -2,9 +2,11 @@ package randsampFM;
 
 import randsampFM.types.*;
 import randsampFM.constraints.CrossConstraint;
+import randsampFM.constraints.Clause;
 import randsampFM.featureDiagram.FeatureDiagram;
 import randsampFM.constraintsRemoval.*;
 import randsampFM.splittedFM.SplittedFDList;
+import randsampFM.parser.*;
 
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
@@ -12,9 +14,10 @@ import org.chocosolver.solver.Settings;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.variables.IntVar;
+import org.chocosolver.solver.expression.discrete.relational.ReExpression;
 
 import de.neominik.uvl.ast.UVLModel;
-import de.neominik.uvl.UVLParser;
+//import de.neominik.uvl.UVLParser;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,8 +45,12 @@ public class FeatureModel implements FMSampleCountEnum {
   }
 
   public static FeatureModel parse(final String fileName) {
+    return UVLParser.parse(fileName);
+  }
+
+  public static FeatureModel neominikParse(final String fileName) {
     try {
-      return FeatureModel.parse((UVLModel) UVLParser.parse(Files.readString(Path.of(fileName))));
+      return FeatureModel.neominikParse((UVLModel) de.neominik.uvl.UVLParser.parse(Files.readString(Path.of(fileName))));
     } catch (IOException e) {
       e.printStackTrace();
       System.exit(0);
@@ -51,12 +58,12 @@ public class FeatureModel implements FMSampleCountEnum {
     }
   }
 
-  public static FeatureModel parse(final UVLModel uvlModel) {
+  public static FeatureModel neominikParse(final UVLModel uvlModel) {
     List<CrossConstraint> crossConstraints = new ArrayList<CrossConstraint>();
     for (Object cstr : uvlModel.getConstraints())
       crossConstraints.add(CrossConstraint.fromUVLConstraint(cstr));
     return new FeatureModel(FeatureDiagram.parse(uvlModel.getRootFeatures()[0]), crossConstraints);
-  }
+    }
 
   public SplittedFDList removeConstraints() {
     //featureDiagram.saveGraphvizToFile("./out_graphs/start.dot");
@@ -66,10 +73,20 @@ public class FeatureModel implements FMSampleCountEnum {
     featureToVar.get(featureDiagram.getRootFeature()).eq(1).post();
     final List<Constraint> modelCrossConstraints = new ArrayList<Constraint>();
     for (CrossConstraint cstr : crossConstraints) {
-      Constraint currentModelCstr = cstr.getCPConstraint(featureToVar).decompose(); // maybe use .extension()
-      currentModelCstr.post();
-      modelCrossConstraints.add(currentModelCstr);
+      ReExpression expr = cstr.getCPConstraint(featureToVar);
+      if (expr instanceof BoolVar)
+        try {
+          ((BoolVar) expr).instantiateTo(1,null);
+        } catch (Exception e) {
+          throw new IllegalStateException("error on initialization");
+        }
+      else {
+        Constraint currentModelCstr = expr.decompose(); // maybe use .extension()
+        currentModelCstr.post();
+        modelCrossConstraints.add(currentModelCstr);
+      }
     }
+    System.out.println("constraints created");
     final Solver solver = model.getSolver();
     solver.setSearch(VarInConstraintStrategy.findConstraints(model.retrieveBoolVars(), new HashSet<IntVar>(featureToVar.values()), modelCrossConstraints, model.getCstrs()));
     FeatureDiagramRecorder recorder = new FeatureDiagramRecorder(featureDiagram, featureToVar);
@@ -120,6 +137,34 @@ public class FeatureModel implements FMSampleCountEnum {
       builder.append("\n");
       builder.append(cstr.toString());
     }
+    return builder.toString();
+  }
+
+  public String toUVL() {
+    StringBuilder builder = new StringBuilder("namespace mainFD\n\nfeatures\n");
+    builder.append(featureDiagram.toUVL("\t"));
+    builder.append("\nconstraints\n");
+    for (CrossConstraint cc : crossConstraints) {
+      builder.append("\t"+cc.toUVL()+"\n");
+    }
+    return builder.toString();
+  }
+
+  public String toDimacs() {
+    StringIntLink siLink = StringIntLink.fromSet(featureDiagram.getFeatures());
+    List<Clause> clausesTree = new ArrayList<Clause>();
+    featureDiagram.addTreeClauses(clausesTree, siLink);
+    List<Clause> clausesCC = new ArrayList<Clause>();
+    //for (CrossConstraint cc : crossConstraints)
+      //clausesCC.addAll(cc.getAllClauses(siLink));
+    StringBuilder builder = new StringBuilder();
+    builder.append(siLink.toDimacsComments());
+    builder.append("p cnf " + siLink.size() + " " + (clausesTree.size()+clausesCC.size()+1) + "\n");
+    builder.append(new Clause(List.of(siLink.getInt(featureDiagram.getRootFeature().getName()))).toDimacs()+"\n");
+    for (Clause treeClause : clausesTree)
+      builder.append(treeClause.toDimacs()+"\n");
+    for (Clause ccClause : clausesCC)
+      builder.append(ccClause.toDimacs()+"\n");
     return builder.toString();
   }
 }

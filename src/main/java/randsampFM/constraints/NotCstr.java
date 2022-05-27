@@ -24,6 +24,14 @@ public class NotCstr extends CrossConstraint {
       return new TrueCstr();
     else if (child instanceof NotCstr)
       return ((NotCstr) child).child;
+    else if (child instanceof AndCstr) {
+      AndCstr andCstr = (AndCstr) child;
+      return OrCstr.of(NotCstr.of(andCstr.left),NotCstr.of(andCstr.right));
+    }
+    else if (child instanceof OrCstr) {
+      OrCstr orCstr = (OrCstr) child;
+      return AndCstr.of(NotCstr.of(orCstr.left),NotCstr.of(orCstr.right));
+    }
     else
       return new NotCstr(child);
   }
@@ -61,5 +69,10 @@ public class NotCstr extends CrossConstraint {
   @Override
   public String toString() {
     return "NOT("+child.toString()+")";
+  }
+
+  @Override
+  public String toUVL() {
+    return "!"+child.toUVL();
   }
 }

@@ -1,6 +1,8 @@
 package randsampFM.featureDiagram;
 
 import randsampFM.types.*;
+import randsampFM.constraints.Clause;
+import randsampFM.parser.StringIntLink;
 
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.variables.BoolVar;
@@ -10,6 +12,7 @@ import org.javatuples.Triplet;
 import java.math.BigInteger;
 import java.util.Set;
 import java.util.Map;
+import java.util.List;
 import java.util.Random;
 
 public final class FDLeaf extends FeatureDiagram {
@@ -43,6 +46,10 @@ public final class FDLeaf extends FeatureDiagram {
     featureToVar.put(label, mainVar);
     return mainVar;
   }
+
+  @Override
+  public void addTreeClauses(final List<Clause> clauses, final StringIntLink link) {}
+
 
   @Override
   public BigInteger count() {

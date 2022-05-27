@@ -1,6 +1,8 @@
 package randsampFM.featureDiagram;
 
 import randsampFM.types.*;
+import randsampFM.constraints.Clause;
+import randsampFM.parser.StringIntLink;
 
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.variables.BoolVar;
@@ -46,6 +48,7 @@ public final class FDMandOpt extends FeatureDiagram {
   @Override
   public Set<Feature> getFeatures() {
     Set<Feature> allFeatures = new HashSet<Feature>();
+    allFeatures.add(label);
     for(FeatureDiagram mandChild : mandChildren)
       allFeatures.addAll(mandChild.getFeatures());
     for(FeatureDiagram optChild : optChildren)
@@ -161,6 +164,19 @@ public final class FDMandOpt extends FeatureDiagram {
   }
 
   @Override
+  public void addTreeClauses(final List<Clause> clauses, final StringIntLink link) {
+    for (FeatureDiagram mand : mandChildren) {
+      clauses.add(new Clause(List.of(link.getInt(label.getName()), -link.getInt(mand.getRootFeature().getName()))));
+      clauses.add(new Clause(List.of(link.getInt(mand.getRootFeature().getName()), -link.getInt(label.getName()))));
+      mand.addTreeClauses(clauses, link);
+    }
+    for (FeatureDiagram opt : optChildren) {
+      clauses.add(new Clause(List.of(link.getInt(label.getName()), -link.getInt(opt.getRootFeature().getName()))));
+      opt.addTreeClauses(clauses, link);
+    }
+  }
+
+  @Override
   public BigInteger count() {
     if(this.nbConfigurations == null) {
       BigInteger optCount;
@@ -248,12 +264,12 @@ public final class FDMandOpt extends FeatureDiagram {
   @Override
   public String toUVL(final String baseIndentation) {
     StringBuilder builder = new StringBuilder(baseIndentation + label + "\n");
-    builder.append("  " + baseIndentation + "mandatory" + "\n");
+    builder.append("\t" + baseIndentation + "mandatory" + "\n");
     for (FeatureDiagram mand : mandChildren)
-      builder.append(mand.toUVL("    "+baseIndentation));
-    builder.append("  " + baseIndentation + "optional" + "\n");
+      builder.append(mand.toUVL("\t\t"+baseIndentation));
+    builder.append("\t" + baseIndentation + "optional" + "\n");
     for (FeatureDiagram opt : optChildren)
-      builder.append(opt.toUVL("    "+baseIndentation));
+      builder.append(opt.toUVL("\t\t"+baseIndentation));
     return builder.toString();
   }
 

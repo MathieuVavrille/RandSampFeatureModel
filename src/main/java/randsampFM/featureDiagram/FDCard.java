@@ -1,6 +1,8 @@
 package randsampFM.featureDiagram;
 
 import randsampFM.types.*;
+import randsampFM.constraints.Clause;
+import randsampFM.parser.StringIntLink;
 
 import org.javatuples.Triplet;
 
@@ -47,6 +49,10 @@ public class FDCard extends FeatureDiagram {
 
   @Override
   public BoolVar addConstraints(final Model model, final Map<Feature,BoolVar> featureToVar) {
+    throw new UnsupportedOperationException("Not Implemented");
+  }
+  @Override
+  public void addTreeClauses(final List<Clause> clauses, final StringIntLink link) {
     throw new UnsupportedOperationException("Not Implemented");
   }
 

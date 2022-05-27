@@ -64,4 +64,9 @@ public class EquivCstr extends BinaryCrossConstraint {
   public String toString() {
     return "EQUIV("+left.toString()+","+right.toString()+")";
   }
+
+  @Override
+  public String toUVL() {
+    return "("+left.toUVL()+" <=> "+right.toString()+")";
+  }
 }

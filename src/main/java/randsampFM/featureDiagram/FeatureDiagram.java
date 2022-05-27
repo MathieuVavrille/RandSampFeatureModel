@@ -2,6 +2,8 @@ package randsampFM.featureDiagram;
 
 import randsampFM.types.*;
 import randsampFM.FMSampleCountEnum;
+import randsampFM.constraints.Clause;
+import randsampFM.parser.StringIntLink;
 
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.variables.BoolVar;
@@ -78,6 +80,9 @@ public abstract class FeatureDiagram implements FMSampleCountEnum {
 
   /** Outputs the uvl format */
   public abstract String toUVL(final String indentation);
+
+  /** Adds all the clauses necessary to represent the tree constraints */
+  public abstract void addTreeClauses(final List<Clause> clauses, final StringIntLink link);
 
   
   public abstract BigInteger count();

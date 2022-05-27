@@ -45,4 +45,9 @@ public class FalseCstr extends CrossConstraint {
   public String toString() {
     return "FALSE";
   }
+
+  @Override
+  public String toUVL() {
+    return "false";
+  }
 }

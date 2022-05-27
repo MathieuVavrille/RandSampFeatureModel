@@ -45,6 +45,8 @@ public abstract class CrossConstraint {
   /** Returns the set of features necessarily set to `true`, and the ones necessarily set to `false`, when the goal is to set the formula to `false` */
   public abstract Pair<Set<randsampFM.types.Feature>,Set<randsampFM.types.Feature>> forcedFeaturesForFalse();
 
+  public abstract String toUVL();
+
   /** Create the constraint from an UVLModel constraint. Depending on the type of the constraint, creates the right class. */
   public static CrossConstraint fromUVLConstraint(final Object constraint) {
     if (constraint instanceof Not) {

@@ -1,6 +1,8 @@
 package randsampFM.featureDiagram;
 
 import randsampFM.types.*;
+import randsampFM.constraints.Clause;
+import randsampFM.parser.StringIntLink;
 
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.variables.BoolVar;
@@ -38,6 +40,7 @@ public final class FDXor extends FeatureDiagram{
   @Override
   public Set<Feature> getFeatures() {
     Set<Feature> allFeatures = new HashSet<Feature>();
+    allFeatures.add(label);
     for(FeatureDiagram child : children)
       allFeatures.addAll(child.getFeatures());
     return allFeatures;
@@ -111,6 +114,23 @@ public final class FDXor extends FeatureDiagram{
     model.sum(childrenVars, "=", mainVar).post();
     return mainVar;
   }
+
+  @Override
+  public void addTreeClauses(final List<Clause> clauses, final StringIntLink link) {
+    List<Integer> allChildren = new ArrayList<Integer>();
+    allChildren.add(-link.getInt(label.getName()));
+    for (FeatureDiagram child : children) {
+      clauses.add(new Clause(List.of(link.getInt(label.getName()), -link.getInt(child.getRootFeature().getName()))));
+      child.addTreeClauses(clauses, link);
+      allChildren.add(link.getInt(child.getRootFeature().getName()));
+    }
+    clauses.add(new Clause(allChildren));
+    for (int i = 0; i < children.size()-1; i++) {
+      for (int j = i+1; j < children.size(); j++) {
+        clauses.add(new Clause(List.of(-link.getInt(children.get(i).getRootFeature().getName()), -link.getInt(children.get(j).getRootFeature().getName()))));
+      }
+    }
+  }
   
   @Override
   public BigInteger count() {
@@ -162,9 +182,9 @@ public final class FDXor extends FeatureDiagram{
   @Override
   public String toUVL(final String baseIndentation) {
     StringBuilder builder = new StringBuilder(baseIndentation + label + "\n");
-    builder.append("  " + baseIndentation + "alternative" + "\n");
+    builder.append("\t" + baseIndentation + "alternative" + "\n");
     for (FeatureDiagram child : children) {
-      builder.append(child.toUVL("    "+baseIndentation));
+      builder.append(child.toUVL("\t\t"+baseIndentation));
     }
     return builder.toString();
   }

@@ -33,7 +33,7 @@ public class ImplCstr extends BinaryCrossConstraint {
     else if (right instanceof TrueCstr)
       return new TrueCstr();
     else
-      return new ImplCstr(left,right);
+      return OrCstr.of(NotCstr.of(left),right);
   }
 
   @Override
@@ -71,5 +71,10 @@ public class ImplCstr extends BinaryCrossConstraint {
   @Override
   public String toString() {
     return "IMPL("+left.toString()+","+right.toString()+")";
+  }
+
+  @Override
+  public String toUVL() {
+    return "("+left.toUVL()+" => "+right.toString()+")";
   }
 }

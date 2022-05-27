@@ -63,4 +63,10 @@ public class AndCstr extends BinaryCrossConstraint {
   public String toString() {
     return "AND("+left.toString()+","+right.toString()+")";
   }
+
+  @Override
+  public String toUVL() {
+    return "("+left.toUVL()+" & "+right.toString()+")";
+  }
+  
 }

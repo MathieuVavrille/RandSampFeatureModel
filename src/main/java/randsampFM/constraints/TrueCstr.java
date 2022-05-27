@@ -45,4 +45,9 @@ public class TrueCstr extends CrossConstraint {
   public String toString() {
     return "TRUE";
   }
+
+  @Override
+  public String toUVL() {
+    return "true";
+  }
 }

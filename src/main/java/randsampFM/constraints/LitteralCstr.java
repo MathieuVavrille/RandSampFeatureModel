@@ -18,6 +18,17 @@ public class LitteralCstr extends CrossConstraint {
     this.litteral = litteral;
   }
 
+  public static CrossConstraint boolOrVar(final String litteral) {
+    switch (litteral) {
+    case "true":
+      return new TrueCstr();
+    case "false":
+      return new FalseCstr();
+    default:
+      return new LitteralCstr(new Feature(litteral));
+    }
+  }
+
   @Override
   public Pair<Boolean,CrossConstraint> fixVariable(final Set<Feature> forced, final Set<Feature> forbidden) {
     if (forced.contains(litteral))
@@ -54,6 +65,11 @@ public class LitteralCstr extends CrossConstraint {
 
   @Override
   public String toString() {
+    return litteral.toString();
+  }
+
+  @Override
+  public String toUVL() {
     return litteral.toString();
   }
 }
