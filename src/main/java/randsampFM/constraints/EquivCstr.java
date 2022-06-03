@@ -1,12 +1,14 @@
 package randsampFM.constraints;
 
 import randsampFM.types.*;
+import randsampFM.parser.StringIntLink;
 
 import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.expression.discrete.relational.ReExpression;
 
 import org.javatuples.Pair;
 
+import java.util.List;
 import java.util.Set;
 import java.util.Map;
 
@@ -49,6 +51,11 @@ public class EquivCstr extends BinaryCrossConstraint {
   @Override
   public ReExpression getCPConstraint(final Map<Feature,BoolVar> featureToVar) {
     return left.getCPConstraint(featureToVar).iff(right.getCPConstraint(featureToVar));
+  }
+
+  @Override
+  public List<Clause> getEquivalentClauses(final StringIntLink link) {
+    throw new UnsupportedOperationException("Not Implemented");
   }
 
   @Override

@@ -3,6 +3,7 @@ package randsampFM.constraints;
 import randsampFM.types.Configuration;
 import randsampFM.types.ConfSet;
 import randsampFM.FMSampleCountEnum;
+import randsampFM.parser.StringIntLink;
 
 import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.expression.discrete.relational.ReExpression;
@@ -11,6 +12,7 @@ import de.neominik.uvl.ast.*;
 
 import org.javatuples.Pair;
 
+import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
@@ -44,6 +46,9 @@ public abstract class CrossConstraint {
   public abstract Pair<Set<randsampFM.types.Feature>,Set<randsampFM.types.Feature>> forcedFeaturesForTrue();
   /** Returns the set of features necessarily set to `true`, and the ones necessarily set to `false`, when the goal is to set the formula to `false` */
   public abstract Pair<Set<randsampFM.types.Feature>,Set<randsampFM.types.Feature>> forcedFeaturesForFalse();
+
+  /** Returns a list of clauses representing the expression */
+  public abstract List<Clause> getEquivalentClauses(final StringIntLink link);
 
   public abstract String toUVL();
 

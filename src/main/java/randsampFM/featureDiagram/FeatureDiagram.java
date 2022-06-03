@@ -4,6 +4,7 @@ import randsampFM.types.*;
 import randsampFM.FMSampleCountEnum;
 import randsampFM.constraints.Clause;
 import randsampFM.parser.StringIntLink;
+import randsampFM.MiniSat;
 
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.variables.BoolVar;
@@ -83,6 +84,14 @@ public abstract class FeatureDiagram implements FMSampleCountEnum {
 
   /** Adds all the clauses necessary to represent the tree constraints */
   public abstract void addTreeClauses(final List<Clause> clauses, final StringIntLink link);
+
+  /** Adds the constraints of the tree in the MiniSat model. Also create the BoolVars associated to each feature.
+   * @param model in which to add the constraints
+   * @param link the link between features and integers
+   * @returns the BoolVar representing the root feature (also added in the map)
+   */
+  // public abstract void addConstraints(final MiniSat sat, final StringIntLink link);
+  // TODO maybe later
 
   
   public abstract BigInteger count();

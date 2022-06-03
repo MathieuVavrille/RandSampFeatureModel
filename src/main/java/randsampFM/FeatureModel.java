@@ -150,13 +150,34 @@ public class FeatureModel implements FMSampleCountEnum {
     return builder.toString();
   }
 
+  public MiniSat getMiniSatInstance() {
+    MiniSat sat = new MiniSat();
+    StringIntLink siLink = StringIntLink.fromSet(featureDiagram.getFeatures());
+    for (int i = 0; i < siLink.size(); i++) {
+      if (i != sat.newVariable())
+        throw new IllegalStateException("I suppose that MiniSat returns variables from 0 to n-1");
+    }
+    List<Clause> clausesTree = new ArrayList<Clause>(); // TODO improve with featureDiagram.addConstraints(sat, siLink);
+    featureDiagram.addTreeClauses(clausesTree, siLink);
+    for (Clause ct : clausesTree)
+      ct.addToMiniSat(sat);
+    sat.addClause(sat.makeLiteral(siLink.getInt(featureDiagram.getRootFeature().getName())-1, true));
+    // CrossConstraints
+    List<Clause> clausesCC = new ArrayList<Clause>();
+    for (CrossConstraint cc : crossConstraints)
+      clausesCC.addAll(cc.getEquivalentClauses(siLink));
+    for (Clause cc : clausesCC)
+      cc.addToMiniSat(sat);
+    return sat;
+  }
+
   public String toDimacs() {
     StringIntLink siLink = StringIntLink.fromSet(featureDiagram.getFeatures());
     List<Clause> clausesTree = new ArrayList<Clause>();
     featureDiagram.addTreeClauses(clausesTree, siLink);
     List<Clause> clausesCC = new ArrayList<Clause>();
     //for (CrossConstraint cc : crossConstraints)
-      //clausesCC.addAll(cc.getAllClauses(siLink));
+      //cc.addAll(cc.getAllClauses(siLink));
     StringBuilder builder = new StringBuilder();
     builder.append(siLink.toDimacsComments());
     builder.append("p cnf " + siLink.size() + " " + (clausesTree.size()+clausesCC.size()+1) + "\n");
@@ -166,5 +187,9 @@ public class FeatureModel implements FMSampleCountEnum {
     for (Clause ccClause : clausesCC)
       builder.append(ccClause.toDimacs()+"\n");
     return builder.toString();
+  }
+
+  public FeatureDiagram getFeatureDiagram() {
+    return featureDiagram;
   }
 }

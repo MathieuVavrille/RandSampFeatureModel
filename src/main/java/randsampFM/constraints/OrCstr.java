@@ -1,12 +1,15 @@
 package randsampFM.constraints;
 
 import randsampFM.types.*;
+import randsampFM.parser.StringIntLink;
 
 import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.expression.discrete.relational.ReExpression;
 
 import org.javatuples.Pair;
 
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
@@ -43,6 +46,27 @@ public class OrCstr extends BinaryCrossConstraint {
   @Override
   public ReExpression getCPConstraint(final Map<Feature,BoolVar> featureToVar) {
     return left.getCPConstraint(featureToVar).or(right.getCPConstraint(featureToVar));
+  }
+
+  @Override
+  public List<Clause> getEquivalentClauses(final StringIntLink link) {
+    List<Clause> leftClauses = left.getEquivalentClauses(link);
+    List<Clause> rightClauses = right.getEquivalentClauses(link);
+    if (leftClauses.size() == 1) {
+      for (Clause cl : rightClauses)
+        cl.addAll(leftClauses.get(0));
+      return rightClauses;
+    }
+    if (rightClauses.size() == 1) {
+      for (Clause cl : leftClauses)
+        cl.addAll(rightClauses.get(0));
+      return leftClauses;
+    }
+    List<Clause> newClauses = new ArrayList<Clause>();
+    for (Clause leftClause : leftClauses)
+      for (Clause rightClause : rightClauses)
+        newClauses.add(Clause.join(leftClause,rightClause));
+    return newClauses;
   }
 
   @Override

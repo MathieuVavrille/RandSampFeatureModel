@@ -17,12 +17,8 @@ import java.util.Map;
 10 | 0
 11 | 1
 */
-public class ImplCstr extends BinaryCrossConstraint {
+public abstract class ImplCstr {
   
-  private ImplCstr(final CrossConstraint left, final CrossConstraint right) {
-    super(left,right);
-  }
-
   public static CrossConstraint of(final CrossConstraint left, final CrossConstraint right) {
     if (left instanceof FalseCstr)
       return new TrueCstr();
@@ -36,7 +32,8 @@ public class ImplCstr extends BinaryCrossConstraint {
       return OrCstr.of(NotCstr.of(left),right);
   }
 
-  @Override
+  // Legacy code
+  /*@Override
   public Pair<Boolean,CrossConstraint> fixVariable(final Set<Feature> forced, final Set<Feature> forbidden) {
     Pair<Boolean, CrossConstraint> leftFix = left.fixVariable(forced,forbidden);
     Pair<Boolean, CrossConstraint> rightFix = right.fixVariable(forced,forbidden);
@@ -76,5 +73,5 @@ public class ImplCstr extends BinaryCrossConstraint {
   @Override
   public String toUVL() {
     return "("+left.toUVL()+" => "+right.toString()+")";
-  }
+  }*/
 }

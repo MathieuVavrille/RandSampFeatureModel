@@ -20,11 +20,43 @@ import java.math.BigInteger;
 public class TestMain {
 
   public static void main(String[] args) {
-    testDimacs("./models/simple.uvl");
+    testFMiniSat("./models/jhipster.uvl");
+    //testDimacs("./models/simple.uvl");
     //parseTest("../uvl-models/Feature_Models/Operating_Systems/KConfig/embtoolkit.uvl");
     //testFMCount("./models/simple.uvl");
     //testFMCount("../uvl-models/Feature_Models/Operating_Systems/KConfig/axTLS.uvl");
     //UVLParser.parse("./models/jhipster.uvl");
+  }
+
+  private static void testFMiniSat(final String path) {
+    FeatureModel fm = FeatureModel.parse(path);
+    MiniSat sat = fm.getMiniSatInstance();
+    long startTime = System.nanoTime();
+    System.out.println(sat.count());
+    long middleTime = System.nanoTime();
+    System.out.println("New count time = " + (middleTime-startTime)/1000000 + "ms");
+    //SplittedFDList sfd = fm.removeConstraints();
+    System.out.println(fm.removeConstraints().count());
+    long endTime = System.nanoTime();
+    System.out.println("Old count time = " + (endTime-middleTime)/1000000 + "ms");
+  }
+
+  private static void testMiniSat() {
+    MiniSat sat = new MiniSat();
+    int a = sat.newVariable();
+    int b = sat.newVariable();
+    int c = sat.newVariable();
+    int d = sat.newVariable();
+    System.out.println(a + " " + b + " " + c + " " + d);
+    int at = MiniSat.makeLiteral(a, true);
+    int bf = MiniSat.makeLiteral(b, false);
+    int ct = MiniSat.makeLiteral(c, true);
+    sat.addClause(at,bf,ct); // a !b c
+    int af = MiniSat.makeLiteral(a, false);
+    int bt = MiniSat.makeLiteral(b, true);
+    int dt = MiniSat.makeLiteral(d, true);
+    sat.addClause(af,bt,dt); // !a b t
+    System.out.println(sat.count());
   }
 
   private static void testDimacs(final String path) {

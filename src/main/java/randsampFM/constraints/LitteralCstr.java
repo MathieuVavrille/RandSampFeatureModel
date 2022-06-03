@@ -1,12 +1,15 @@
 package randsampFM.constraints;
 
 import randsampFM.types.*;
+import randsampFM.parser.StringIntLink;
 
 import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.expression.discrete.relational.ReExpression;
 
 import org.javatuples.Pair;
 
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
@@ -54,6 +57,12 @@ public class LitteralCstr extends CrossConstraint {
     return featureToVar.get(litteral);
   }
 
+
+  @Override
+  public List<Clause> getEquivalentClauses(final StringIntLink link) {
+    return new ArrayList<Clause>(List.of(new Clause(List.of(link.getInt(litteral.getName())))));
+  }
+
   @Override
   public Pair<Set<Feature>,Set<Feature>> forcedFeaturesForTrue() {
     return new Pair<Set<Feature>,Set<Feature>>(Set.of(litteral),Set.of());
@@ -61,6 +70,10 @@ public class LitteralCstr extends CrossConstraint {
   @Override
   public Pair<Set<Feature>,Set<Feature>> forcedFeaturesForFalse() {
     return new Pair<Set<Feature>,Set<Feature>>(Set.of(),Set.of(litteral));
+  }
+
+  public Feature getFeature() {
+    return litteral;
   }
 
   @Override

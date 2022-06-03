@@ -1,12 +1,15 @@
 package randsampFM.constraints;
 
 import randsampFM.types.*;
+import randsampFM.parser.StringIntLink;
 
 import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.expression.discrete.relational.ReExpression;
 
 import org.javatuples.Pair;
 
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
@@ -42,6 +45,13 @@ public class AndCstr extends BinaryCrossConstraint {
   @Override
   public ReExpression getCPConstraint(final Map<Feature,BoolVar> featureToVar) {
     return left.getCPConstraint(featureToVar).and(right.getCPConstraint(featureToVar));
+  }
+
+  @Override
+  public List<Clause> getEquivalentClauses(final StringIntLink link) {
+    List<Clause> equivalentClauses = new ArrayList<Clause>(left.getEquivalentClauses(link));
+    equivalentClauses.addAll(right.getEquivalentClauses(link));
+    return equivalentClauses;
   }
 
   @Override

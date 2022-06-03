@@ -1,12 +1,15 @@
 package randsampFM.constraints;
 
 import randsampFM.types.*;
+import randsampFM.parser.StringIntLink;
 
 import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.expression.discrete.relational.ReExpression;
 
 import org.javatuples.Pair;
 
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.Map;
 
@@ -50,6 +53,14 @@ public class NotCstr extends CrossConstraint {
   @Override
   public ReExpression getCPConstraint(final Map<Feature,BoolVar> featureToVar) {
     return child.getCPConstraint(featureToVar).not();
+  }
+
+  @Override
+  public List<Clause> getEquivalentClauses(final StringIntLink link) {
+    if (child instanceof LitteralCstr)
+      return new ArrayList<Clause>(List.of(new Clause(List.of(-link.getInt(((LitteralCstr) child).getFeature().getName())))));
+    else
+      throw new UnsupportedOperationException("Not implemented");
   }
 
   @Override
