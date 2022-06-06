@@ -267,6 +267,12 @@ public class MiniSat {// implements SatFactory, Dimacs {
     }
   }
 
+  /** Backtracks to the last variable instantiated to 0, and instantiate it to 1
+   * Returns true if the search is completed */
+  boolean backtrackSearch() {
+    return true;
+  }
+
   // Gives the current decisionlevel.
   int trailMarker() {
     return trail_markers_.size();
@@ -458,6 +464,7 @@ public class MiniSat {// implements SatFactory, Dimacs {
    * Counts the model.
    */
   BigInteger countSearch() {
+    long nb_iterations = 0;
     assert ok_;
     int backtrack_level;
     int conflictC = 0;
@@ -504,12 +511,14 @@ public class MiniSat {// implements SatFactory, Dimacs {
       } else {
 
         // Simplify the set of problem clauses:
-        if (trailMarker() == 0 && !simplify())
+        if (trailMarker() == 0 && !simplify()) {
+          System.out.println(nb_iterations);
           return result;
+        }
 
-        if (learnts.size() - trail_.size() >= max_learnts)
+        /*if (learnts.size() - trail_.size() >= max_learnts)
           // Reduce the set of learnt clauses:
-          reduceDB();
+          reduceDB();*/
 
         // New variable decision:
         decisions++;
@@ -517,11 +526,12 @@ public class MiniSat {// implements SatFactory, Dimacs {
         //System.out.println("next " + next);
 
         if (next == litUndef) {
+          nb_iterations++;
           // Model found
           //System.out.print("SAT\n");
           //System.out.println(nVars());
           result = result.add(BigInteger.ONE.shiftLeft(nVars()-trail_.size()));
-          for (int i = 0; i < nVars(); i++) {
+          /*for (int i = 0; i < nVars(); i++) {
             if (assignment_.get(i) == Boolean.lUndef)
               System.out.print("*");
             else if (assignment_.get(i) == Boolean.lTrue)
@@ -529,15 +539,17 @@ public class MiniSat {// implements SatFactory, Dimacs {
             else
               System.out.print("0");
           }
-          System.out.println("");
+          System.out.println("");*/
           /*System.out.println(" -----------------------------------");*/
           //System.out.println(assignment_);
           //return ESat.TRUE;
           /*System.out.println("Trail");
           System.out.println(trail_);
           System.out.println(trail_markers_);*/
-          if (trail_markers_.size() == 0)
+          if (trail_markers_.size() == 0) {
+            System.out.println(nb_iterations);
             return result;
+          }
           learnt_clause.clear();
           backtrack_level = refute(learnt_clause);
           //System.out.println(backtrack_level);
@@ -554,12 +566,12 @@ public class MiniSat {// implements SatFactory, Dimacs {
           } else {
             Clause cr = new Clause(learnt_clause.toArray(), true);
             //System.out.println("new clause");
-            System.out.println(cr);
+            //System.out.println(cr);
             learnts.add(cr);
             attachClause(cr);
             claBumpActivity(cr);
             uncheckedEnqueue(learnt_clause.get(0), cr);
-            System.out.println(learnts);
+            //System.out.println(learnts);
           }
 
           varDecayActivity();
@@ -570,14 +582,14 @@ public class MiniSat {// implements SatFactory, Dimacs {
             learntsize_adjust_confl *= learntsize_adjust_inc;
             learntsize_adjust_cnt = (int) learntsize_adjust_confl;
             max_learnts *= learntsize_inc;
-          }
+            }
 
-          continue;
         }
-
-        // Increase decision level and enqueue 'next'
-        pushTrailMarker();
-        uncheckedEnqueue(next, CR_Undef);
+        else {
+          // Increase decision level and enqueue 'next'
+          pushTrailMarker();
+          uncheckedEnqueue(next, CR_Undef);
+        }
       }
     }
 

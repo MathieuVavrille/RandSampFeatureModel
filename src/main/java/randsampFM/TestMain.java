@@ -20,8 +20,7 @@ import java.math.BigInteger;
 public class TestMain {
 
   public static void main(String[] args) {
-    testFMiniSat("./models/axTLS2.uvl");
-    testFMiniSat("./models/axTLS3.uvl");
+    testFMiniSat("./models/axTLS.uvl");
     //testDimacs("./models/simple.uvl");
     //parseTest("../uvl-models/Feature_Models/Operating_Systems/KConfig/embtoolkit.uvl");
     //testFMCount("./models/simple.uvl");

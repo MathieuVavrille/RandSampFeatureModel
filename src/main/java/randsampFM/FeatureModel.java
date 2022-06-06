@@ -86,7 +86,7 @@ public class FeatureModel implements FMSampleCountEnum {
         modelCrossConstraints.add(currentModelCstr);
       }
     }
-    System.out.println("constraints created");
+    //System.out.println("constraints created");
     final Solver solver = model.getSolver();
     solver.setSearch(VarInConstraintStrategy.findConstraints(model.retrieveBoolVars(), new HashSet<IntVar>(featureToVar.values()), modelCrossConstraints, model.getCstrs()));
     FeatureDiagramRecorder recorder = new FeatureDiagramRecorder(featureDiagram, featureToVar);
@@ -153,7 +153,7 @@ public class FeatureModel implements FMSampleCountEnum {
   public MiniSat getMiniSatInstance() {
     MiniSat sat = new MiniSat();
     StringIntLink siLink = StringIntLink.fromSet(featureDiagram.getFeatures());
-    System.out.println(siLink);
+    //System.out.println(siLink);
     for (int i = 0; i < siLink.size(); i++) {
       if (i != sat.newVariable())
         throw new IllegalStateException("I suppose that MiniSat returns variables from 0 to n-1");
