@@ -44,4 +44,9 @@ public class StringIntLink {
   public int size() {
     return intToString.size();
   }
+
+  @Override
+  public String toString() {
+    return intToString.toString();
+  }
 }

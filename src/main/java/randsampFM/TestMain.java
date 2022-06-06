@@ -20,7 +20,8 @@ import java.math.BigInteger;
 public class TestMain {
 
   public static void main(String[] args) {
-    testFMiniSat("./models/jhipster.uvl");
+    testFMiniSat("./models/axTLS2.uvl");
+    testFMiniSat("./models/axTLS3.uvl");
     //testDimacs("./models/simple.uvl");
     //parseTest("../uvl-models/Feature_Models/Operating_Systems/KConfig/embtoolkit.uvl");
     //testFMCount("./models/simple.uvl");
@@ -29,6 +30,7 @@ public class TestMain {
   }
 
   private static void testFMiniSat(final String path) {
+    System.out.println("\n");
     FeatureModel fm = FeatureModel.parse(path);
     MiniSat sat = fm.getMiniSatInstance();
     long startTime = System.nanoTime();

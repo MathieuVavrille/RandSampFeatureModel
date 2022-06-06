@@ -521,7 +521,7 @@ public class MiniSat {// implements SatFactory, Dimacs {
           //System.out.print("SAT\n");
           //System.out.println(nVars());
           result = result.add(BigInteger.ONE.shiftLeft(nVars()-trail_.size()));
-          /*for (int i = 0; i < nVars(); i++) {
+          for (int i = 0; i < nVars(); i++) {
             if (assignment_.get(i) == Boolean.lUndef)
               System.out.print("*");
             else if (assignment_.get(i) == Boolean.lTrue)
@@ -529,7 +529,8 @@ public class MiniSat {// implements SatFactory, Dimacs {
             else
               System.out.print("0");
           }
-          System.out.println(" -----------------------------------");*/
+          System.out.println("");
+          /*System.out.println(" -----------------------------------");*/
           //System.out.println(assignment_);
           //return ESat.TRUE;
           /*System.out.println("Trail");
@@ -553,11 +554,12 @@ public class MiniSat {// implements SatFactory, Dimacs {
           } else {
             Clause cr = new Clause(learnt_clause.toArray(), true);
             //System.out.println("new clause");
-            //System.out.println(cr);
+            System.out.println(cr);
             learnts.add(cr);
             attachClause(cr);
             claBumpActivity(cr);
             uncheckedEnqueue(learnt_clause.get(0), cr);
+            System.out.println(learnts);
           }
 
           varDecayActivity();

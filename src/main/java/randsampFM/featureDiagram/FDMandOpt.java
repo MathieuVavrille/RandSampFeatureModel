@@ -264,12 +264,16 @@ public final class FDMandOpt extends FeatureDiagram {
   @Override
   public String toUVL(final String baseIndentation) {
     StringBuilder builder = new StringBuilder(baseIndentation + label + "\n");
+    if (mandChildren.size() > 0) {
     builder.append("\t" + baseIndentation + "mandatory" + "\n");
     for (FeatureDiagram mand : mandChildren)
       builder.append(mand.toUVL("\t\t"+baseIndentation));
+    }
+    if (optChildren.size() > 0) {
     builder.append("\t" + baseIndentation + "optional" + "\n");
     for (FeatureDiagram opt : optChildren)
       builder.append(opt.toUVL("\t\t"+baseIndentation));
+    }
     return builder.toString();
   }
 

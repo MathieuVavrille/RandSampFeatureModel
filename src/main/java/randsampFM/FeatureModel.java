@@ -153,6 +153,7 @@ public class FeatureModel implements FMSampleCountEnum {
   public MiniSat getMiniSatInstance() {
     MiniSat sat = new MiniSat();
     StringIntLink siLink = StringIntLink.fromSet(featureDiagram.getFeatures());
+    System.out.println(siLink);
     for (int i = 0; i < siLink.size(); i++) {
       if (i != sat.newVariable())
         throw new IllegalStateException("I suppose that MiniSat returns variables from 0 to n-1");

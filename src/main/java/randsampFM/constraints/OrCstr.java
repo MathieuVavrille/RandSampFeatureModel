@@ -91,6 +91,6 @@ public class OrCstr extends BinaryCrossConstraint {
 
   @Override
   public String toUVL() {
-    return "("+left.toUVL()+" | "+right.toString()+")";
+    return "("+left.toUVL()+" | "+right.toUVL()+")";
   }
 }
