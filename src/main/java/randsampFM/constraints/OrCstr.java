@@ -52,7 +52,8 @@ public class OrCstr extends BinaryCrossConstraint {
   public List<Clause> getEquivalentClauses(final StringIntLink link) {
     List<Clause> leftClauses = left.getEquivalentClauses(link);
     List<Clause> rightClauses = right.getEquivalentClauses(link);
-    if (leftClauses.size() == 1) {
+    // TODO improve maybe if I find something good
+    /*if (leftClauses.size() == 1) {
       for (Clause cl : rightClauses)
         cl.addAll(leftClauses.get(0));
       return rightClauses;
@@ -61,11 +62,15 @@ public class OrCstr extends BinaryCrossConstraint {
       for (Clause cl : leftClauses)
         cl.addAll(rightClauses.get(0));
       return leftClauses;
-    }
+      }*/
     List<Clause> newClauses = new ArrayList<Clause>();
     for (Clause leftClause : leftClauses)
-      for (Clause rightClause : rightClauses)
-        newClauses.add(Clause.join(leftClause,rightClause));
+      for (Clause rightClause : rightClauses) {
+        Clause mergedClause = Clause.join(leftClause,rightClause);
+        if (mergedClause != null)
+          newClauses.add(mergedClause);
+      }
+    System.out.println(leftClauses.size() + " " + rightClauses.size() + " " + newClauses.size());
     return newClauses;
   }
 

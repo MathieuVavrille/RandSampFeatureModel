@@ -21,7 +21,7 @@ public class TestMain {
 
   public static void main(String[] args) {
     assertCounts();
-    testFMiniSat("./models/berkeleydb.uvl");//"../uvl-models/Feature_Models/Operating_Systems/KConfig/embtoolkit.uvl");
+    testFMiniSat("../uvl-models/Feature_Models/Operating_Systems/KConfig/embtoolkit.uvl");
     //testDimacs("./models/simple.uvl");
     //parseTest("../uvl-models/Feature_Models/Operating_Systems/KConfig/embtoolkit.uvl");
     //testFMCount("./models/simple.uvl");
