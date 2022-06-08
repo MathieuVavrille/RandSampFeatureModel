@@ -3,6 +3,7 @@ package randsampFM.featureDiagram;
 import randsampFM.types.*;
 import randsampFM.constraints.Clause;
 import randsampFM.parser.StringIntLink;
+import randsampFM.MiniSat;
 
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.variables.BoolVar;
@@ -57,6 +58,13 @@ public final class FDLeaf extends FeatureDiagram {
       this.nbConfigurations = BigInteger.ONE;
     } 
     return nbConfigurations;
+  }
+  
+  @Override
+  public BigInteger countAssigned(final List<MiniSat.Boolean> assignment, final StringIntLink silink) {
+    if (assignment.get(silink.getInt(label.getName())) == MiniSat.Boolean.lFalse)
+      return BigInteger.ZERO;
+    return BigInteger.ONE;
   }
 
   @Override

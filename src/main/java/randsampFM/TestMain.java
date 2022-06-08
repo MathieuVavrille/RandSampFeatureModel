@@ -20,7 +20,8 @@ import java.math.BigInteger;
 public class TestMain {
 
   public static void main(String[] args) {
-    testFMiniSat("./models/axTLS.uvl");
+    assertCounts();
+    testFMiniSat("./models/berkeleydb.uvl");//"../uvl-models/Feature_Models/Operating_Systems/KConfig/embtoolkit.uvl");
     //testDimacs("./models/simple.uvl");
     //parseTest("../uvl-models/Feature_Models/Operating_Systems/KConfig/embtoolkit.uvl");
     //testFMCount("./models/simple.uvl");
@@ -28,21 +29,42 @@ public class TestMain {
     //UVLParser.parse("./models/jhipster.uvl");
   }
 
+  private static void assertCounts() {
+    assertCount("./models/simple.uvl");
+    assertCount("./models/spark.uvl");
+    assertCount("./models/jhipster.uvl");
+    assertCount("./models/berkeleydb.uvl");
+  }
+  private static void assertCount(final String path) {
+    FeatureModel fm = FeatureModel.parse(path);
+    long startTime = System.nanoTime();
+    if (fm.getMiniSatInstance().count(fm.getFeatureDiagram(), fm.getSiLink()) == fm.removeConstraints().count())
+      throw new IllegalStateException("Counts not equal, bug somewhere");
+    System.out.println("time = " + (System.nanoTime()-startTime)/1000000 + "ms");
+  }
+
   private static void testFMiniSat(final String path) {
     System.out.println("\n");
     FeatureModel fm = FeatureModel.parse(path);
+    //System.out.println(fm.getSiLink());
     MiniSat sat = fm.getMiniSatInstance();
     long startTime = System.nanoTime();
-    System.out.println(sat.count());
+    System.out.println(sat.count(fm.getFeatureDiagram(), fm.getSiLink()));
+    //System.out.println(fm.enumerate().size());
     long middleTime = System.nanoTime();
     System.out.println("New count time = " + (middleTime-startTime)/1000000 + "ms");
-    //SplittedFDList sfd = fm.removeConstraints();
-    System.out.println(fm.removeConstraints().count());
+    SplittedFDList sfd = fm.removeConstraints();
+    System.out.println(sfd.count());
+    /*for (FeatureDiagram fd : sfd.getFDs()) {
+      System.out.println(fd.count());
+      System.out.println(fd.toUVL(""));
+      }*/
     long endTime = System.nanoTime();
+    //System.out.println(sfd);
     System.out.println("Old count time = " + (endTime-middleTime)/1000000 + "ms");
   }
 
-  private static void testMiniSat() {
+  /*private static void testMiniSat() {
     MiniSat sat = new MiniSat();
     int a = sat.newVariable();
     int b = sat.newVariable();
@@ -58,7 +80,7 @@ public class TestMain {
     int dt = MiniSat.makeLiteral(d, true);
     sat.addClause(af,bt,dt); // !a b t
     System.out.println(sat.count());
-  }
+    }*/
 
   private static void testDimacs(final String path) {
     FeatureModel fm = FeatureModel.parse(path);

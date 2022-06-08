@@ -36,12 +36,18 @@ public class FeatureModel implements FMSampleCountEnum {
 
   private final FeatureDiagram featureDiagram;
   private final List<CrossConstraint> crossConstraints;
+  private final StringIntLink siLink;
 
   private BigInteger nbConfigurations;
 
   public FeatureModel(final FeatureDiagram featureDiagram, final List<CrossConstraint> crossConstraints) {
+    this(featureDiagram, crossConstraints, StringIntLink.fromSet(featureDiagram.getFeatures()));
+  }
+
+  public FeatureModel(final FeatureDiagram featureDiagram, final List<CrossConstraint> crossConstraints, final StringIntLink siLink) {
     this.featureDiagram = featureDiagram;
     this.crossConstraints = crossConstraints;
+    this.siLink = siLink;
   }
 
   public static FeatureModel parse(final String fileName) {
@@ -86,6 +92,7 @@ public class FeatureModel implements FMSampleCountEnum {
         modelCrossConstraints.add(currentModelCstr);
       }
     }
+    //System.out.println(modelCrossConstraints);
     //System.out.println("constraints created");
     final Solver solver = model.getSolver();
     solver.setSearch(VarInConstraintStrategy.findConstraints(model.retrieveBoolVars(), new HashSet<IntVar>(featureToVar.values()), modelCrossConstraints, model.getCstrs()));
@@ -152,7 +159,6 @@ public class FeatureModel implements FMSampleCountEnum {
 
   public MiniSat getMiniSatInstance() {
     MiniSat sat = new MiniSat();
-    StringIntLink siLink = StringIntLink.fromSet(featureDiagram.getFeatures());
     //System.out.println(siLink);
     for (int i = 0; i < siLink.size(); i++) {
       if (i != sat.newVariable())
@@ -162,18 +168,17 @@ public class FeatureModel implements FMSampleCountEnum {
     featureDiagram.addTreeClauses(clausesTree, siLink);
     for (Clause ct : clausesTree)
       ct.addToMiniSat(sat);
-    sat.addClause(sat.makeLiteral(siLink.getInt(featureDiagram.getRootFeature().getName())-1, true));
+    sat.addClause(sat.makeLiteral(siLink.getInt(featureDiagram.getRootFeature().getName()), true));
     // CrossConstraints
     List<Clause> clausesCC = new ArrayList<Clause>();
     for (CrossConstraint cc : crossConstraints)
       clausesCC.addAll(cc.getEquivalentClauses(siLink));
     for (Clause cc : clausesCC)
-      cc.addToMiniSat(sat);
+      cc.addToMiniSat(sat, true);
     return sat;
   }
 
   public String toDimacs() {
-    StringIntLink siLink = StringIntLink.fromSet(featureDiagram.getFeatures());
     List<Clause> clausesTree = new ArrayList<Clause>();
     featureDiagram.addTreeClauses(clausesTree, siLink);
     List<Clause> clausesCC = new ArrayList<Clause>();
@@ -182,7 +187,7 @@ public class FeatureModel implements FMSampleCountEnum {
     StringBuilder builder = new StringBuilder();
     builder.append(siLink.toDimacsComments());
     builder.append("p cnf " + siLink.size() + " " + (clausesTree.size()+clausesCC.size()+1) + "\n");
-    builder.append(new Clause(List.of(siLink.getInt(featureDiagram.getRootFeature().getName()))).toDimacs()+"\n");
+    builder.append(Clause.ofTrueLit(siLink.getInt(featureDiagram.getRootFeature().getName())).toDimacs()+"\n");
     for (Clause treeClause : clausesTree)
       builder.append(treeClause.toDimacs()+"\n");
     for (Clause ccClause : clausesCC)
@@ -192,5 +197,9 @@ public class FeatureModel implements FMSampleCountEnum {
 
   public FeatureDiagram getFeatureDiagram() {
     return featureDiagram;
+  }
+
+  public StringIntLink getSiLink() {
+    return siLink;
   }
 }

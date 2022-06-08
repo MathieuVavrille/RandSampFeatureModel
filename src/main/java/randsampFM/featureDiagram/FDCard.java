@@ -3,6 +3,7 @@ package randsampFM.featureDiagram;
 import randsampFM.types.*;
 import randsampFM.constraints.Clause;
 import randsampFM.parser.StringIntLink;
+import randsampFM.MiniSat;
 
 import org.javatuples.Triplet;
 
@@ -59,7 +60,11 @@ public class FDCard extends FeatureDiagram {
   @Override
   public BigInteger count() {
     throw new UnsupportedOperationException("Not Implemented");
-    //return BigInteger.ONE;
+  }
+  
+  @Override
+  public BigInteger countAssigned(final List<MiniSat.Boolean> assignment, final StringIntLink silink) {
+    throw new UnsupportedOperationException("Not Implemented");
   }
 
   @Override

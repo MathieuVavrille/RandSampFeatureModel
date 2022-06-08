@@ -3,6 +3,7 @@ package randsampFM.featureDiagram;
 import randsampFM.types.*;
 import randsampFM.constraints.Clause;
 import randsampFM.parser.StringIntLink;
+import randsampFM.MiniSat;
 
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.variables.BoolVar;
@@ -112,14 +113,15 @@ public class FDOr extends FeatureDiagram {
 
   @Override
   public void addTreeClauses(final List<Clause> clauses, final StringIntLink link) {
-    List<Integer> allChildren = new ArrayList<Integer>();
-    allChildren.add(-link.getInt(label.getName()));
+    final int mainVar = link.getInt(label.getName());
+    final Clause globalOr = Clause.ofFalseLit(mainVar);
     for (FeatureDiagram child : children) {
-      clauses.add(new Clause(List.of(link.getInt(label.getName()), -link.getInt(child.getRootFeature().getName()))));
+      clauses.add(Clause.impl(link.getInt(child.getRootFeature().getName()),
+                              mainVar));
       child.addTreeClauses(clauses, link);
-      allChildren.add(link.getInt(child.getRootFeature().getName()));
+      globalOr.addTrueLit(link.getInt(child.getRootFeature().getName()));
     }
-    clauses.add(new Clause(allChildren));
+    clauses.add(globalOr);
   }
 
   @Override
@@ -128,6 +130,26 @@ public class FDOr extends FeatureDiagram {
       nbConfigurations = children.stream().map(x->x.count().add(BigInteger.ONE)).reduce(BigInteger.ONE, (a,b)-> a.multiply(b)).subtract(BigInteger.ONE);
     }
     return nbConfigurations;
+  }
+  
+  @Override
+  public BigInteger countAssigned(final List<MiniSat.Boolean> assignment, final StringIntLink silink) {
+    if (assignment.get(silink.getInt(label.getName())) == MiniSat.Boolean.lFalse)
+      return BigInteger.ZERO;
+    BigInteger result = BigInteger.ONE;
+    boolean isMandatory = false;
+    for (FeatureDiagram child : children) {
+      BigInteger childRes = child.countAssigned(assignment, silink);
+      if (assignment.get(silink.getInt(child.getRootFeature().getName())) == MiniSat.Boolean.lTrue) {
+        result = result.multiply(childRes);
+        isMandatory = true;
+      }
+      else
+        result = result.multiply(childRes.add(BigInteger.ONE));
+    }
+    if (isMandatory)
+      return result;
+    return result.subtract(BigInteger.ONE);
   }
 
   @Override

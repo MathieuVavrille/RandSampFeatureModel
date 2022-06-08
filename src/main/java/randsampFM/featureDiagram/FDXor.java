@@ -3,6 +3,7 @@ package randsampFM.featureDiagram;
 import randsampFM.types.*;
 import randsampFM.constraints.Clause;
 import randsampFM.parser.StringIntLink;
+import randsampFM.MiniSat;
 
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.variables.BoolVar;
@@ -117,17 +118,19 @@ public final class FDXor extends FeatureDiagram{
 
   @Override
   public void addTreeClauses(final List<Clause> clauses, final StringIntLink link) {
-    List<Integer> allChildren = new ArrayList<Integer>();
-    allChildren.add(-link.getInt(label.getName()));
+    final int mainVar = link.getInt(label.getName());
+    final Clause globalOr = Clause.ofFalseLit(mainVar);
     for (FeatureDiagram child : children) {
-      clauses.add(new Clause(List.of(link.getInt(label.getName()), -link.getInt(child.getRootFeature().getName()))));
+      clauses.add(Clause.impl(link.getInt(child.getRootFeature().getName()),
+                              mainVar));
       child.addTreeClauses(clauses, link);
-      allChildren.add(link.getInt(child.getRootFeature().getName()));
+      globalOr.addTrueLit(link.getInt(child.getRootFeature().getName()));
     }
-    clauses.add(new Clause(allChildren));
+    clauses.add(globalOr);
     for (int i = 0; i < children.size()-1; i++) {
       for (int j = i+1; j < children.size(); j++) {
-        clauses.add(new Clause(List.of(-link.getInt(children.get(i).getRootFeature().getName()), -link.getInt(children.get(j).getRootFeature().getName()))));
+        clauses.add(Clause.notBoth(link.getInt(children.get(i).getRootFeature().getName()),
+                                   link.getInt(children.get(j).getRootFeature().getName())));
       }
     }
   }
@@ -138,6 +141,13 @@ public final class FDXor extends FeatureDiagram{
       nbConfigurations = children.stream().map(x->x.count()).reduce(BigInteger.ZERO, (a,b)-> a.add(b));
     }
     return nbConfigurations;
+  }
+  
+  @Override
+  public BigInteger countAssigned(final List<MiniSat.Boolean> assignment, final StringIntLink silink) {
+    if (assignment.get(silink.getInt(label.getName())) == MiniSat.Boolean.lFalse)
+      return BigInteger.ZERO;
+    return children.stream().map(x->x.countAssigned(assignment, silink)).reduce(BigInteger.ZERO, (a,b)-> a.add(b));
   }
   
   @Override

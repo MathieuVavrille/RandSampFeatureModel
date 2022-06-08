@@ -58,7 +58,7 @@ public class NotCstr extends CrossConstraint {
   @Override
   public List<Clause> getEquivalentClauses(final StringIntLink link) {
     if (child instanceof LitteralCstr)
-      return new ArrayList<Clause>(List.of(new Clause(List.of(-link.getInt(((LitteralCstr) child).getFeature().getName())))));
+      return new ArrayList<Clause>(List.of(Clause.ofFalseLit(link.getInt(((LitteralCstr) child).getFeature().getName()))));
     else
       throw new UnsupportedOperationException("Not implemented");
   }

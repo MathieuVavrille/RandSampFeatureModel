@@ -94,6 +94,8 @@ public abstract class FeatureDiagram implements FMSampleCountEnum {
   // TODO maybe later
 
   
+  public abstract BigInteger countAssigned(final List<MiniSat.Boolean> assignment, final StringIntLink link);
+  
   public abstract BigInteger count();
   
   public abstract ConfSet enumerate();

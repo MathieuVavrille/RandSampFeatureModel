@@ -3,6 +3,7 @@ package randsampFM.featureDiagram;
 import randsampFM.types.*;
 import randsampFM.constraints.Clause;
 import randsampFM.parser.StringIntLink;
+import randsampFM.MiniSat;
 
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.variables.BoolVar;
@@ -165,13 +166,17 @@ public final class FDMandOpt extends FeatureDiagram {
 
   @Override
   public void addTreeClauses(final List<Clause> clauses, final StringIntLink link) {
+    final int mainVar = link.getInt(label.getName());
     for (FeatureDiagram mand : mandChildren) {
-      clauses.add(new Clause(List.of(link.getInt(label.getName()), -link.getInt(mand.getRootFeature().getName()))));
-      clauses.add(new Clause(List.of(link.getInt(mand.getRootFeature().getName()), -link.getInt(label.getName()))));
+      clauses.add(Clause.impl(mainVar,
+                              link.getInt(mand.getRootFeature().getName())));
+      clauses.add(Clause.impl(link.getInt(mand.getRootFeature().getName()),
+                              mainVar));
       mand.addTreeClauses(clauses, link);
     }
     for (FeatureDiagram opt : optChildren) {
-      clauses.add(new Clause(List.of(link.getInt(label.getName()), -link.getInt(opt.getRootFeature().getName()))));
+      clauses.add(Clause.impl(link.getInt(opt.getRootFeature().getName()),
+                              mainVar));
       opt.addTreeClauses(clauses, link);
     }
   }
@@ -192,6 +197,24 @@ public final class FDMandOpt extends FeatureDiagram {
       this.nbConfigurations = mandCount.multiply(optCount);
     }
     return nbConfigurations;
+  }
+  
+  @Override
+  public BigInteger countAssigned(final List<MiniSat.Boolean> assignment, final StringIntLink silink) {
+    if (assignment.get(silink.getInt(label.getName())) == MiniSat.Boolean.lFalse)
+      return BigInteger.ZERO;
+    BigInteger optCount;
+    BigInteger mandCount;
+    optCount = optChildren.stream()
+      .map(x -> x.countAssigned(assignment, silink).add((assignment.get(silink.getInt(x.getRootFeature().getName())) == MiniSat.Boolean.lTrue) ? BigInteger.ZERO : BigInteger.ONE))
+      .reduce(BigInteger.ONE, (a,b)->a.multiply(b));
+    if(mandChildren.isEmpty())
+      mandCount = BigInteger.ONE;
+    else
+      mandCount = mandChildren.stream()
+        .map(x -> x.countAssigned(assignment, silink))
+        .reduce(BigInteger.ONE,(a,b)->a.multiply(b));
+    return mandCount.multiply(optCount);
   }
 	
   public ConfSet enumerate() {

@@ -44,7 +44,8 @@ public class VarInConstraintStrategy extends AbstractStrategy<IntVar> {
     for (Constraint cstr : originalCrossConstraints) {
       importantConstraints.add(cstr);
       for (Variable var : cstr.getPropagators()[0].getVars())
-        fillConstraints(var, importantConstraints, featureVars, varsToConstraints);
+          if (!featureVars.contains(var))
+            fillConstraints(var, importantConstraints, featureVars, varsToConstraints);
     }
     return new VarInConstraintStrategy(allVars, importantConstraints);
   }

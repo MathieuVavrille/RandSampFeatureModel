@@ -79,4 +79,9 @@ public class SplittedFDList implements FMSampleCountEnum {
   public List<FeatureDiagram> getFDs() {
     return splittedFDs;
   }
+
+  @Override
+  public String toString() {
+    return splittedFDs.toString();
+  }
 }

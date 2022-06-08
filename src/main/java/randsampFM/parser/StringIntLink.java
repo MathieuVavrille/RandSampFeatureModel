@@ -22,12 +22,12 @@ public class StringIntLink {
   }
   
   public void addString(final String s) {
-    stringToInt.put(s, intToString.size()+1);
+    stringToInt.put(s, intToString.size());
     intToString.add(s);
   }
   
   public String getString(final int i) {
-    return intToString.get(i-1);
+    return intToString.get(i);
   }
   public int getInt(final String s) {
     return stringToInt.get(s);

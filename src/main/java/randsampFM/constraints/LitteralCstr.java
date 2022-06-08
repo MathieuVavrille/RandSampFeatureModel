@@ -60,7 +60,7 @@ public class LitteralCstr extends CrossConstraint {
 
   @Override
   public List<Clause> getEquivalentClauses(final StringIntLink link) {
-    return new ArrayList<Clause>(List.of(new Clause(List.of(link.getInt(litteral.getName())))));
+    return new ArrayList<Clause>(List.of(Clause.ofTrueLit(link.getInt(litteral.getName()))));
   }
 
   @Override

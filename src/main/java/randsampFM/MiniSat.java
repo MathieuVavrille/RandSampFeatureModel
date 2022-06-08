@@ -9,6 +9,9 @@
  */
 package randsampFM;
 
+import randsampFM.featureDiagram.FeatureDiagram;
+import randsampFM.parser.StringIntLink;
+
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
@@ -54,8 +57,10 @@ public class MiniSat {// implements SatFactory, Dimacs {
   // If false, the constraints are already unsatisfiable. No part of
   // the solver state may be used!
   public boolean ok_;
-  // List of problem addClauses.
+  // List of all problem addClauses.
   public final ArrayList<Clause> clauses = new ArrayList<>();
+  // List of branching clauses.
+  public final ArrayList<Clause> branchingClauses = new ArrayList<>();
   // List of learnt addClauses.
   private final ArrayList<Clause> learnts = new ArrayList<>();
   // 'watches_[lit]' is a list of constraints watching 'lit'(will go
@@ -159,6 +164,14 @@ public class MiniSat {// implements SatFactory, Dimacs {
     }
   }
 
+  /** Add a clause to the clauses to branch on
+   * @param ps a list of literals
+   * @return {@code false} if the Boolean formula is unsatisfiable
+   */
+  public boolean addBranchingClause(TIntList ps) {
+    branchingClauses.add(new Clause(ps.toArray()));
+    return addClause(ps);
+  }
 
   /**
    * Add a clause to the solver.
@@ -450,20 +463,20 @@ public class MiniSat {// implements SatFactory, Dimacs {
    *
    * @return the number of solutions
    */
-  public BigInteger count() {
+  public BigInteger count(final FeatureDiagram featureDiagram, final StringIntLink siLink) {
     model.clear();
     conflict.clear();
     if (!ok_) return BigInteger.ZERO;
     max_learnts = nClauses() * learntsize_factor;
     learntsize_adjust_confl = 100;
     learntsize_adjust_cnt = (int) learntsize_adjust_confl;
-    return countSearch();
+    return countSearch(featureDiagram, siLink);
   }
 
   /**
    * Counts the model.
    */
-  BigInteger countSearch() {
+  BigInteger countSearch(final FeatureDiagram featureDiagram, final StringIntLink siLink) {
     long nb_iterations = 0;
     assert ok_;
     int backtrack_level;
@@ -512,7 +525,7 @@ public class MiniSat {// implements SatFactory, Dimacs {
 
         // Simplify the set of problem clauses:
         if (trailMarker() == 0 && !simplify()) {
-          System.out.println(nb_iterations);
+          //System.out.println(nb_iterations);
           return result;
         }
 
@@ -530,8 +543,10 @@ public class MiniSat {// implements SatFactory, Dimacs {
           // Model found
           //System.out.print("SAT\n");
           //System.out.println(nVars());
-          result = result.add(BigInteger.ONE.shiftLeft(nVars()-trail_.size()));
-          /*for (int i = 0; i < nVars(); i++) {
+          //result = result.add(BigInteger.ONE.shiftLeft(nVars()-trail_.size()));
+          result = result.add(featureDiagram.countAssigned(assignment_, siLink));
+          /*System.out.println(result);
+          for (int i = 0; i < nVars(); i++) {
             if (assignment_.get(i) == Boolean.lUndef)
               System.out.print("*");
             else if (assignment_.get(i) == Boolean.lTrue)
@@ -547,7 +562,7 @@ public class MiniSat {// implements SatFactory, Dimacs {
           System.out.println(trail_);
           System.out.println(trail_markers_);*/
           if (trail_markers_.size() == 0) {
-            System.out.println(nb_iterations);
+            //System.out.println(nb_iterations);
             return result;
           }
           learnt_clause.clear();
@@ -624,7 +639,7 @@ public class MiniSat {// implements SatFactory, Dimacs {
     int propagatedLit = litUndef;
     int lit;
     cl:
-    for (Clause c : clauses) {
+    for (Clause c : branchingClauses) {
       for (int i = 0; i < c.size(); i++) {
         lit = c._g(i); 
         switch (valueLit(lit)) {
