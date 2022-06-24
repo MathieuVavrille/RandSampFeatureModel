@@ -52,6 +52,7 @@ public class OrCstr extends BinaryCrossConstraint {
   public List<Clause> getEquivalentClauses(final StringIntLink link) {
     List<Clause> leftClauses = left.getEquivalentClauses(link);
     List<Clause> rightClauses = right.getEquivalentClauses(link);
+    //System.out.println(leftClauses.size() + " " + rightClauses.size());
     // TODO improve maybe if I find something good
     /*if (leftClauses.size() == 1) {
       for (Clause cl : rightClauses)
@@ -70,8 +71,19 @@ public class OrCstr extends BinaryCrossConstraint {
         if (mergedClause != null)
           newClauses.add(mergedClause);
       }
-    System.out.println(leftClauses.size() + " " + rightClauses.size() + " " + newClauses.size());
+    //System.out.println(leftClauses.size() + " " + rightClauses.size() + " " + newClauses.size());
     return newClauses;
+  }
+
+  @Override
+  public Pair<Integer,Boolean> addTseitinClauses(final List<Clause> clauses, final StringIntLink link) {
+    final Pair<Integer,Boolean> leftLit = left.addTseitinClauses(clauses, link);
+    final Pair<Integer,Boolean> rightLit = right.addTseitinClauses(clauses, link);
+    final int newVar = link.createDummy();
+    clauses.add(Clause.ofLit(leftLit.getValue0(), leftLit.getValue1(), rightLit.getValue0(), rightLit.getValue1(), newVar, false));
+    clauses.add(Clause.ofLit(leftLit.getValue0(), !leftLit.getValue1(), newVar, true));
+    clauses.add(Clause.ofLit(rightLit.getValue0(), !rightLit.getValue1(), newVar, true));
+    return new Pair<Integer,Boolean>(newVar, true);
   }
 
   @Override

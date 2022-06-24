@@ -9,6 +9,7 @@ import randsampFM.parser.UVLParser;
 //import de.neominik.uvl.ast.UVLModel;
 //import de.neominik.uvl.UVLParser;
 
+import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.io.IOException;
@@ -20,13 +21,32 @@ import java.math.BigInteger;
 public class TestMain {
 
   public static void main(String[] args) {
-    assertCounts();
-    testFMiniSat("../uvl-models/Feature_Models/Operating_Systems/KConfig/embtoolkit.uvl");
+    //assertCounts();
+    //saveToDimacs("./models/simple.uvl", "./simple.dimacs");
+    saveToDimacs("./models/jhipster.uvl", "./jhipster.dimacs");
+    //saveToDimacs("../uvl-models/Feature_Models/Operating_Systems/KConfig/uClibc.uvl", "./uclib.dimacs");
     //testDimacs("./models/simple.uvl");
     //parseTest("../uvl-models/Feature_Models/Operating_Systems/KConfig/embtoolkit.uvl");
     //testFMCount("./models/simple.uvl");
     //testFMCount("../uvl-models/Feature_Models/Operating_Systems/KConfig/axTLS.uvl");
     //UVLParser.parse("./models/jhipster.uvl");
+  }
+
+  private static void saveToDimacs(final String path, final String outName) {
+    FeatureModel fm = FeatureModel.parse(path);
+    System.out.println(fm.enumerate().size());
+    //SplittedFDList sfd = fm.removeConstraints();
+    /*System.out.println(fm.count());
+    System.out.println(sfd.count());
+    System.out.println(fm.getMiniSatInstance().count(fm.getFeatureDiagram(), fm.getSiLink()));*/
+    try {
+      FileWriter myWriter = new FileWriter(outName);
+      myWriter.write(fm.toDimacs());
+      myWriter.close();
+    }
+    catch (IOException e) {
+      System.out.println("Cannot write to file " + outName);
+    }
   }
 
   private static void assertCounts() {
@@ -49,6 +69,7 @@ public class TestMain {
     //System.out.println(fm.getSiLink());
     MiniSat sat = fm.getMiniSatInstance();
     long startTime = System.nanoTime();
+    System.out.println("sat instance generated");
     System.out.println(sat.count(fm.getFeatureDiagram(), fm.getSiLink()));
     //System.out.println(fm.enumerate().size());
     long middleTime = System.nanoTime();

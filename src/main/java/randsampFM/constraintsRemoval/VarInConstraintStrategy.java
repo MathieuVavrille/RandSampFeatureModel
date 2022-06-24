@@ -25,9 +25,9 @@ public class VarInConstraintStrategy extends AbstractStrategy<IntVar> {
   public VarInConstraintStrategy(final IntVar[] vars, List<Constraint> constraints) {
     super(vars);
     this.constraints = constraints;
-    /*for (Constraint c : constraints) {
+    for (Constraint c : constraints) {
       System.out.println(c);
-      }*/
+      }
     this.depth = vars[0].getModel().getEnvironment().makeInt();
   }
 
@@ -75,21 +75,14 @@ public class VarInConstraintStrategy extends AbstractStrategy<IntVar> {
         for (IntVar var : prop.getVars()) {
           if (!var.isInstantiated()) {// pick and uninstantiated variable
             varsOccurences.put(var,varsOccurences.getOrDefault(var,0)+1);
+            for (int i = 0; i < depth.get(); i++)
+              System.out.print(" ");
+            System.out.println(var);
             return makeIntDecision(var, var.getLB()); // LB is 0, var should be a IntVar for the FM application
           }
         }
       }
     }
-    /*IntVar bestVar = null;
-    int bestVal = 10000000;
-    for (Map.Entry<IntVar, Integer> entry : varsOccurences.entrySet()) {
-      if (bestVar == null || entry.getValue() < bestVal) {
-        bestVar = entry.getKey();
-        bestVal = entry.getValue();
-      }
-    }
-    if (bestVar != null)
-    return makeIntDecision(bestVar, bestVar.getLB());*/
     return null;
   }
 }

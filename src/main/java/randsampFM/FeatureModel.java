@@ -19,6 +19,8 @@ import org.chocosolver.solver.expression.discrete.relational.ReExpression;
 import de.neominik.uvl.ast.UVLModel;
 //import de.neominik.uvl.UVLParser;
 
+import org.javatuples.Pair;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.io.File;
@@ -92,6 +94,8 @@ public class FeatureModel implements FMSampleCountEnum {
         modelCrossConstraints.add(currentModelCstr);
       }
     }
+    for (Constraint cstr: model.getCstrs())
+      System.out.println(cstr);
     //System.out.println(modelCrossConstraints);
     //System.out.println("constraints created");
     final Solver solver = model.getSolver();
@@ -171,8 +175,12 @@ public class FeatureModel implements FMSampleCountEnum {
     sat.addClause(sat.makeLiteral(siLink.getInt(featureDiagram.getRootFeature().getName()), true));
     // CrossConstraints
     List<Clause> clausesCC = new ArrayList<Clause>();
-    for (CrossConstraint cc : crossConstraints)
-      clausesCC.addAll(cc.getEquivalentClauses(siLink));
+    /*for (CrossConstraint cc : crossConstraints)
+    clausesCC.addAll(cc.getEquivalentClauses(siLink));*/
+    for (CrossConstraint cc : crossConstraints) {
+      Pair<Integer,Boolean> lit = cc.addTseitinClauses(clausesCC, siLink);
+      clausesCC.add(Clause.ofLit((int) lit.getValue0(), (boolean) lit.getValue1()));
+    }     
     for (Clause cc : clausesCC)
       cc.addToMiniSat(sat, true);
     return sat;
@@ -182,14 +190,24 @@ public class FeatureModel implements FMSampleCountEnum {
     List<Clause> clausesTree = new ArrayList<Clause>();
     featureDiagram.addTreeClauses(clausesTree, siLink);
     List<Clause> clausesCC = new ArrayList<Clause>();
-    //for (CrossConstraint cc : crossConstraints)
-      //cc.addAll(cc.getAllClauses(siLink));
+    int currentCpt = 0;
+    for (CrossConstraint cc : crossConstraints) {
+      Pair<Integer,Boolean> lit = cc.addTseitinClauses(clausesCC, siLink);
+      clausesCC.add(Clause.ofLit((int) lit.getValue0(), (boolean) lit.getValue1()));
+      System.out.println("\n"+cc + "------------------");
+      for (int i = currentCpt; i < clausesCC.size(); i++)
+        System.out.println(clausesCC.get(i));
+      currentCpt = clausesCC.size();
+    }     
+    /*for (CrossConstraint cc : crossConstraints)
+      clausesCC.addAll(cc.getEquivalentClauses(siLink));*/
     StringBuilder builder = new StringBuilder();
     builder.append(siLink.toDimacsComments());
     builder.append("p cnf " + siLink.size() + " " + (clausesTree.size()+clausesCC.size()+1) + "\n");
     builder.append(Clause.ofTrueLit(siLink.getInt(featureDiagram.getRootFeature().getName())).toDimacs()+"\n");
     for (Clause treeClause : clausesTree)
       builder.append(treeClause.toDimacs()+"\n");
+    builder.append("c end of tree constraints\n");
     for (Clause ccClause : clausesCC)
       builder.append(ccClause.toDimacs()+"\n");
     return builder.toString();

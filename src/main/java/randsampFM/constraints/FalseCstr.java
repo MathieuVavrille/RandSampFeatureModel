@@ -38,6 +38,10 @@ public class FalseCstr extends CrossConstraint {
   public List<Clause> getEquivalentClauses(final StringIntLink link) {
     throw new IllegalStateException("The boolean constants should have been removed");
   }
+  @Override
+  public Pair<Integer,Boolean> addTseitinClauses(final List<Clause> clauses, final StringIntLink link) {
+    throw new IllegalStateException("The boolean constants should have been removed");
+  }
 
   @Override
   public Pair<Set<Feature>,Set<Feature>> forcedFeaturesForTrue() {

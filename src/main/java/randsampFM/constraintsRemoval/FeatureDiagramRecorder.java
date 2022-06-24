@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
-
+import java.util.Arrays;
 
 public class FeatureDiagramRecorder implements IMonitorSolution {
 
@@ -36,9 +36,10 @@ public class FeatureDiagramRecorder implements IMonitorSolution {
       else if (entry.getValue().isInstantiatedTo(1))
         forced.add(entry.getKey());
     }
-    /*System.out.println("Solution");
+    System.out.println(Arrays.toString(featureToVar.get(new ArrayList<Feature>(forced).get(0)).getModel().retrieveIntVars(true)));
+    System.out.println("Solution");
     System.out.println(forced);
-    System.out.println(forbidden);*/
+    System.out.println(forbidden);
     final Triplet<FeatureDiagram.BottomUpCase, FeatureDiagram, Set<Feature>> reducedFD = mainFD.fixFeatures(forced, forbidden);
     if (reducedFD.getValue2().size() > 0) {
       System.out.println("Error, I was able to extract more information");
@@ -49,6 +50,8 @@ public class FeatureDiagramRecorder implements IMonitorSolution {
       System.out.println(reducedFD.getValue2());
       throw new IllegalStateException("Either choco did not propagate enough, or FeatureDiagram.fixFeatures propagated too much");
     }
+    System.out.println(reducedFD.getValue1().toUVL(""));
+    System.out.println(reducedFD.getValue1().count());
     recordedFDs.add(reducedFD.getValue1());
   }
 

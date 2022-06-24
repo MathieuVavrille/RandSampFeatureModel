@@ -63,6 +63,12 @@ public class LitteralCstr extends CrossConstraint {
     return new ArrayList<Clause>(List.of(Clause.ofTrueLit(link.getInt(litteral.getName()))));
   }
 
+  
+  @Override
+  public Pair<Integer,Boolean> addTseitinClauses(final List<Clause> clauses, final StringIntLink link) {
+    return new Pair<Integer,Boolean>(link.getInt(litteral.getName()),true);
+  }
+
   @Override
   public Pair<Set<Feature>,Set<Feature>> forcedFeaturesForTrue() {
     return new Pair<Set<Feature>,Set<Feature>>(Set.of(litteral),Set.of());

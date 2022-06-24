@@ -49,6 +49,10 @@ public abstract class CrossConstraint {
 
   /** Returns a list of clauses representing the expression */
   public abstract List<Clause> getEquivalentClauses(final StringIntLink link);
+  
+  /** Adds to the list of clauses all the clauses involved in the Tseitin transformation
+   * @return the literal (var, value) of the formula */
+  public abstract Pair<Integer,Boolean> addTseitinClauses(final List<Clause> clauses, final StringIntLink link);
 
   public abstract String toUVL();
 

@@ -25,6 +25,14 @@ public class StringIntLink {
     stringToInt.put(s, intToString.size());
     intToString.add(s);
   }
+  /** Creates a dummy variable, and returns its index */
+  public int createDummy() {
+    int v = intToString.size();
+    String s = "_dummy_"+v;
+    stringToInt.put(s,v);
+    intToString.add(s);
+    return v;
+  }
   
   public String getString(final int i) {
     return intToString.get(i);

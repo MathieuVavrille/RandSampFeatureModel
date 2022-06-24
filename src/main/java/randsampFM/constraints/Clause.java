@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 
-/** i represent positive literal, -i represent negative literal */
+/** map between variable index and polarity (negative or positive literal). true represent positive literal, and false negative */
 public class Clause {
   private final Map<Integer,Boolean> clause = new HashMap<Integer,Boolean>();
 
@@ -20,9 +20,22 @@ public class Clause {
   }
 
   /** Constructors helpers */
-  private static Clause ofLit(final int var, final boolean val) {
+  public static Clause ofLit(final int var, final boolean val) {
     Clause res = new Clause();
     res.clause.put(var, val);
+    return res;
+  }
+  public static Clause ofLit(final int var1, final boolean val1, final int var2, final boolean val2) {
+    Clause res = new Clause();
+    res.clause.put(var1, val1);
+    res.clause.put(var2, val2);
+    return res;
+  }
+  public static Clause ofLit(final int var1, final boolean val1, final int var2, final boolean val2, final int var3, final boolean val3) {
+    Clause res = new Clause();
+    res.clause.put(var1, val1);
+    res.clause.put(var2, val2);
+    res.clause.put(var3, val3);
     return res;
   }
   public static Clause ofTrueLit(final int var) {
@@ -99,5 +112,9 @@ public class Clause {
     else
       sat.addClause(satClause);
   }
-  
+
+  @Override
+  public String toString() {
+    return toDimacs();
+  }
 }

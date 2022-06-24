@@ -64,6 +64,12 @@ public class NotCstr extends CrossConstraint {
   }
 
   @Override
+  public Pair<Integer,Boolean> addTseitinClauses(final List<Clause> clauses, final StringIntLink link) {
+    final Pair<Integer,Boolean> childLit = child.addTseitinClauses(clauses, link);
+    return new Pair<Integer,Boolean>(childLit.getValue0(), !childLit.getValue1());
+  }
+
+  @Override
   public Pair<Set<Feature>,Set<Feature>> forcedFeaturesForTrue() {
     return child.forcedFeaturesForFalse();
   }

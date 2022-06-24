@@ -59,6 +59,18 @@ public class EquivCstr extends BinaryCrossConstraint {
   }
 
   @Override
+  public Pair<Integer,Boolean> addTseitinClauses(final List<Clause> clauses, final StringIntLink link) {
+    final Pair<Integer,Boolean> leftLit = left.addTseitinClauses(clauses, link);
+    final Pair<Integer,Boolean> rightLit = right.addTseitinClauses(clauses, link);
+    final int newVar = link.createDummy();
+    clauses.add(Clause.ofLit(leftLit.getValue0(), !leftLit.getValue1(), rightLit.getValue0(), !rightLit.getValue1(), newVar, true));
+    clauses.add(Clause.ofLit(leftLit.getValue0(), leftLit.getValue1(), rightLit.getValue0(), rightLit.getValue1(), newVar, true));
+    clauses.add(Clause.ofLit(leftLit.getValue0(), leftLit.getValue1(), rightLit.getValue0(), !rightLit.getValue1(), newVar, false));
+    clauses.add(Clause.ofLit(leftLit.getValue0(), !leftLit.getValue1(), rightLit.getValue0(), rightLit.getValue1(), newVar, false));
+    return new Pair<Integer,Boolean>(newVar, true);
+  }
+
+  @Override
   public Pair<Set<Feature>,Set<Feature>> forcedFeaturesForTrue() {
     return new Pair<Set<Feature>,Set<Feature>>(Set.of(),Set.of());
   }
