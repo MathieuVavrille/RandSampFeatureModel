@@ -161,46 +161,51 @@ public class FeatureModel implements FMSampleCountEnum {
     return builder.toString();
   }
 
-  public MiniSat getMiniSatInstance() {
+  public MiniSat getMiniSatInstance(final boolean doTseitin) {
+    List<Clause> clausesTree = new ArrayList<Clause>(); // TODO improve with featureDiagram.addConstraints(sat, siLink);
+    featureDiagram.addTreeClauses(clausesTree, siLink);
+    // CrossConstraints
+    List<Clause> clausesCC = new ArrayList<Clause>();
+    if (doTseitin) {
+      for (CrossConstraint cc : crossConstraints) {
+        Pair<Integer,Boolean> lit = cc.addTseitinClauses(clausesCC, siLink);
+        clausesCC.add(Clause.ofLit((int) lit.getValue0(), (boolean) lit.getValue1()));
+      }
+    }
+    else {
+      for (CrossConstraint cc : crossConstraints)
+        clausesCC.addAll(cc.getEquivalentClauses(siLink));
+    }
+    
+    // Creating the solver and adding the constraints
     MiniSat sat = new MiniSat();
-    //System.out.println(siLink);
     for (int i = 0; i < siLink.size(); i++) {
       if (i != sat.newVariable())
         throw new IllegalStateException("I suppose that MiniSat returns variables from 0 to n-1");
     }
-    List<Clause> clausesTree = new ArrayList<Clause>(); // TODO improve with featureDiagram.addConstraints(sat, siLink);
-    featureDiagram.addTreeClauses(clausesTree, siLink);
     for (Clause ct : clausesTree)
       ct.addToMiniSat(sat);
     sat.addClause(sat.makeLiteral(siLink.getInt(featureDiagram.getRootFeature().getName()), true));
-    // CrossConstraints
-    List<Clause> clausesCC = new ArrayList<Clause>();
-    /*for (CrossConstraint cc : crossConstraints)
-    clausesCC.addAll(cc.getEquivalentClauses(siLink));*/
-    for (CrossConstraint cc : crossConstraints) {
-      Pair<Integer,Boolean> lit = cc.addTseitinClauses(clausesCC, siLink);
-      clausesCC.add(Clause.ofLit((int) lit.getValue0(), (boolean) lit.getValue1()));
-    }     
     for (Clause cc : clausesCC)
       cc.addToMiniSat(sat, true);
     return sat;
   }
 
-  public String toDimacs() {
+
+  public String toDimacs(final boolean doTseitin) {
     List<Clause> clausesTree = new ArrayList<Clause>();
     featureDiagram.addTreeClauses(clausesTree, siLink);
     List<Clause> clausesCC = new ArrayList<Clause>();
-    int currentCpt = 0;
-    for (CrossConstraint cc : crossConstraints) {
-      Pair<Integer,Boolean> lit = cc.addTseitinClauses(clausesCC, siLink);
-      clausesCC.add(Clause.ofLit((int) lit.getValue0(), (boolean) lit.getValue1()));
-      System.out.println("\n"+cc + "------------------");
-      for (int i = currentCpt; i < clausesCC.size(); i++)
-        System.out.println(clausesCC.get(i));
-      currentCpt = clausesCC.size();
-    }     
-    /*for (CrossConstraint cc : crossConstraints)
-      clausesCC.addAll(cc.getEquivalentClauses(siLink));*/
+    if (doTseitin) {
+      for (CrossConstraint cc : crossConstraints) {
+        Pair<Integer,Boolean> lit = cc.addTseitinClauses(clausesCC, siLink);
+        clausesCC.add(Clause.ofLit((int) lit.getValue0(), (boolean) lit.getValue1()));
+      }
+    }
+    else {
+      for (CrossConstraint cc : crossConstraints)
+        clausesCC.addAll(cc.getEquivalentClauses(siLink));
+    }
     StringBuilder builder = new StringBuilder();
     builder.append(siLink.toDimacsComments());
     builder.append("p cnf " + siLink.size() + " " + (clausesTree.size()+clausesCC.size()+1) + "\n");

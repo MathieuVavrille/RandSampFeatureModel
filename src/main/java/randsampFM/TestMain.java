@@ -23,7 +23,7 @@ public class TestMain {
   public static void main(String[] args) {
     //assertCounts();
     //saveToDimacs("./models/simple.uvl", "./simple.dimacs");
-    saveToDimacs("./models/jhipster.uvl", "./jhipster.dimacs");
+    saveToDimacs("./models/kconfig/uClib.uvl", "./uClib.dimacs");
     //saveToDimacs("../uvl-models/Feature_Models/Operating_Systems/KConfig/uClibc.uvl", "./uclib.dimacs");
     //testDimacs("./models/simple.uvl");
     //parseTest("../uvl-models/Feature_Models/Operating_Systems/KConfig/embtoolkit.uvl");
@@ -34,14 +34,32 @@ public class TestMain {
 
   private static void saveToDimacs(final String path, final String outName) {
     FeatureModel fm = FeatureModel.parse(path);
-    System.out.println(fm.enumerate().size());
     //SplittedFDList sfd = fm.removeConstraints();
     /*System.out.println(fm.count());
     System.out.println(sfd.count());
     System.out.println(fm.getMiniSatInstance().count(fm.getFeatureDiagram(), fm.getSiLink()));*/
     try {
       FileWriter myWriter = new FileWriter(outName);
-      myWriter.write(fm.toDimacs());
+      myWriter.write(fm.toDimacs(true));
+      myWriter.close();
+    }
+    catch (IOException e) {
+      System.out.println("Cannot write to file " + outName);
+    }
+    System.out.println("Dimacs generated");
+    System.out.println(fm.getMiniSatInstance(true).count(fm.getFeatureDiagram(), fm.getSiLink()));
+  }
+
+  private static void saveToDimacsDeveloped(final String path, final String outName) {
+    FeatureModel fm = FeatureModel.parse(path);
+    System.out.println(fm.getMiniSatInstance(false).count(fm.getFeatureDiagram(), fm.getSiLink()));
+    //SplittedFDList sfd = fm.removeConstraints();
+    /*System.out.println(fm.count());
+    System.out.println(sfd.count());
+    System.out.println(fm.getMiniSatInstance(false).count(fm.getFeatureDiagram(), fm.getSiLink()));*/
+    try {
+      FileWriter myWriter = new FileWriter(outName);
+      myWriter.write(fm.toDimacs(false));
       myWriter.close();
     }
     catch (IOException e) {
@@ -58,7 +76,7 @@ public class TestMain {
   private static void assertCount(final String path) {
     FeatureModel fm = FeatureModel.parse(path);
     long startTime = System.nanoTime();
-    if (fm.getMiniSatInstance().count(fm.getFeatureDiagram(), fm.getSiLink()) == fm.removeConstraints().count())
+    if (fm.getMiniSatInstance(true).count(fm.getFeatureDiagram(), fm.getSiLink()) == fm.removeConstraints().count())
       throw new IllegalStateException("Counts not equal, bug somewhere");
     System.out.println("time = " + (System.nanoTime()-startTime)/1000000 + "ms");
   }
@@ -67,7 +85,7 @@ public class TestMain {
     System.out.println("\n");
     FeatureModel fm = FeatureModel.parse(path);
     //System.out.println(fm.getSiLink());
-    MiniSat sat = fm.getMiniSatInstance();
+    MiniSat sat = fm.getMiniSatInstance(true);
     long startTime = System.nanoTime();
     System.out.println("sat instance generated");
     System.out.println(sat.count(fm.getFeatureDiagram(), fm.getSiLink()));
@@ -105,7 +123,7 @@ public class TestMain {
 
   private static void testDimacs(final String path) {
     FeatureModel fm = FeatureModel.parse(path);
-    System.out.println(fm.toDimacs());
+    System.out.println(fm.toDimacs(true));
     System.out.println(fm);
   }
 
