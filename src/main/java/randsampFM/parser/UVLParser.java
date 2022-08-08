@@ -172,7 +172,7 @@ public class UVLParser {
       case '=':
         return ImplCstr.of(parseConstraint(line, start, priorityPos), parseConstraint(line, priorityPos+2,end)); // '+2' jump two elements !
       case '<':
-        throw new UnsupportedOperationException("Not Implemented");
+        return EquivCstr.of(parseConstraint(line, start, priorityPos), parseConstraint(line, priorityPos+3,end)); // '+3' jump two elements !
       default:
         throw new IllegalStateException("No more case implemented ___ " + line + " ___ " + priorityPos + " " + line.charAt(priorityPos));
       }

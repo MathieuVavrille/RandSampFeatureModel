@@ -53,9 +53,10 @@ public final class Main implements Runnable {
 
     if (dimacsOutput != null) {
       long dimacsGenerationTime = System.nanoTime();
+      Stryng dimacsString = fm.toDimacs(dimacsOutput.isTseitin);
       try {
         FileWriter myWriter = new FileWriter(dimacsOutput.fileName);
-        myWriter.write(fm.toDimacs(dimacsOutput.isTseitin));
+        myWriter.write(dimacsString);
         myWriter.close();
       }
       catch (IOException e) {
@@ -70,8 +71,9 @@ public final class Main implements Runnable {
         System.out.println("Counting time with Choco = " + (System.nanoTime()-startCountingTime));
       }
       else if (countingMethod.countingMiniSat != null) {
-        System.out.println(fm.getMiniSatInstance(countingMethod.countingMiniSat == "Tseitin").count(fm.getFeatureDiagram(), fm.getSiLink()));
-        System.out.println("Counting time with minisat " + (countingMethod.countingMiniSat == "Tseitin" ? "Tseitin" : "developed") + " = " + (System.nanoTime()-startCountingTime));
+        System.out.println(countingMethod.countingMiniSat);
+        System.out.println(fm.getMiniSatInstance(countingMethod.countingMiniSat.equals("Tseitin")).count(fm.getFeatureDiagram(), fm.getSiLink()));
+        System.out.println("Counting time with minisat " + (countingMethod.countingMiniSat.equals("Tseitin") ? "Tseitin" : "developed") + " = " + (System.nanoTime()-startCountingTime));
       }
       else {
         System.out.println(fm.enumerate().size());

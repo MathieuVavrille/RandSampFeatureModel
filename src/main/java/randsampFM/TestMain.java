@@ -21,9 +21,10 @@ import java.math.BigInteger;
 public class TestMain {
 
   public static void main(String[] args) {
+    TestMaxSat.main(args);
     //assertCounts();
     //saveToDimacs("./models/simple.uvl", "./simple.dimacs");
-    saveToDimacs("./models/kconfig/uClib.uvl", "./uClib.dimacs");
+    //saveToDimacs("../feature-models-benchmarks/uvl-models/Feature_Models/Operating_Systems/Linux/Evolution/Linux_v1.uvl", "./test.dimacs");
     //saveToDimacs("../uvl-models/Feature_Models/Operating_Systems/KConfig/uClibc.uvl", "./uclib.dimacs");
     //testDimacs("./models/simple.uvl");
     //parseTest("../uvl-models/Feature_Models/Operating_Systems/KConfig/embtoolkit.uvl");
@@ -47,7 +48,7 @@ public class TestMain {
       System.out.println("Cannot write to file " + outName);
     }
     System.out.println("Dimacs generated");
-    System.out.println(fm.getMiniSatInstance(true).count(fm.getFeatureDiagram(), fm.getSiLink()));
+    //System.out.println(fm.getMiniSatInstance(true).count(fm.getFeatureDiagram(), fm.getSiLink()));
   }
 
   private static void saveToDimacsDeveloped(final String path, final String outName) {
