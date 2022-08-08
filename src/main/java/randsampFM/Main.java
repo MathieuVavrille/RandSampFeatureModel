@@ -53,7 +53,7 @@ public final class Main implements Runnable {
 
     if (dimacsOutput != null) {
       long dimacsGenerationTime = System.nanoTime();
-      Stryng dimacsString = fm.toDimacs(dimacsOutput.isTseitin);
+      String dimacsString = fm.toDimacs(dimacsOutput.isTseitin);
       try {
         FileWriter myWriter = new FileWriter(dimacsOutput.fileName);
         myWriter.write(dimacsString);

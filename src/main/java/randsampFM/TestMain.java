@@ -21,9 +21,8 @@ import java.math.BigInteger;
 public class TestMain {
 
   public static void main(String[] args) {
-    TestMaxSat.main(args);
     //assertCounts();
-    //saveToDimacs("./models/simple.uvl", "./simple.dimacs");
+    saveToDimacs("./models/simple.uvl", "./simple.dimacs");
     //saveToDimacs("../feature-models-benchmarks/uvl-models/Feature_Models/Operating_Systems/Linux/Evolution/Linux_v1.uvl", "./test.dimacs");
     //saveToDimacs("../uvl-models/Feature_Models/Operating_Systems/KConfig/uClibc.uvl", "./uclib.dimacs");
     //testDimacs("./models/simple.uvl");
