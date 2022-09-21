@@ -125,6 +125,14 @@ public class FDOr extends FeatureDiagram {
   }
 
   @Override
+  protected void countSolutionsPerFeatureRec(final Map<Feature,BigInteger> solsPerFeature, final BigInteger factor, final boolean onlyLeaves) {
+    BigInteger selfCount = count();
+    if (!onlyLeaves)
+      solsPerFeature.put(label, selfCount.multiply(factor));
+    children.stream().forEach(child -> child.countSolutionsPerFeatureRec(solsPerFeature, factor.multiply(selfCount.divide(child.count().add(BigInteger.ONE))), onlyLeaves)); // See formulas to understand this
+  }
+
+  @Override
   public BigInteger count() {
     if(this.nbConfigurations == null) {
       nbConfigurations = children.stream().map(x->x.count().add(BigInteger.ONE)).reduce(BigInteger.ONE, (a,b)-> a.multiply(b)).subtract(BigInteger.ONE);

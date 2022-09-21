@@ -38,7 +38,10 @@ public class StringIntLink {
     return intToString.get(i);
   }
   public int getInt(final String s) {
-    return stringToInt.get(s);
+    if (!stringToInt.containsKey(s)) {
+      addString(s);
+    }
+    return intToString.size()-1;
   }
 
   public String toDimacsComments() {

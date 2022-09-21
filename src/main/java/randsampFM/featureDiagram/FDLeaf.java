@@ -51,13 +51,9 @@ public final class FDLeaf extends FeatureDiagram {
   @Override
   public void addTreeClauses(final List<Clause> clauses, final StringIntLink link) {}
 
-
   @Override
-  public BigInteger count() {
-    if(this.nbConfigurations == null) {
-      this.nbConfigurations = BigInteger.ONE;
-    } 
-    return nbConfigurations;
+  protected void countSolutionsPerFeatureRec(final Map<Feature,BigInteger> solsPerFeature, final BigInteger factor, final boolean onlyLeaves) {
+    solsPerFeature.put(label, factor); // There is only one solution on the subtree, so just put the factor to account for the recursive calls
   }
   
   @Override
@@ -65,6 +61,14 @@ public final class FDLeaf extends FeatureDiagram {
     if (assignment.get(silink.getInt(label.getName())) == MiniSat.Boolean.lFalse)
       return BigInteger.ZERO;
     return BigInteger.ONE;
+  }
+
+  @Override
+  public BigInteger count() {
+    if(this.nbConfigurations == null) {
+      this.nbConfigurations = BigInteger.ONE;
+    } 
+    return nbConfigurations;
   }
 
   @Override

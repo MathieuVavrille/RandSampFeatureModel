@@ -58,6 +58,11 @@ public class FDCard extends FeatureDiagram {
   }
 
   @Override
+  protected void countSolutionsPerFeatureRec(final Map<Feature,BigInteger> solsPerFeature, final BigInteger factor, final boolean onlyLeaves) {
+    throw new UnsupportedOperationException("Not Implemented");
+  }
+
+  @Override
   public BigInteger count() {
     throw new UnsupportedOperationException("Not Implemented");
   }

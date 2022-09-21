@@ -15,6 +15,7 @@ import org.javatuples.Triplet;
 
 import java.util.List;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Collections;
 import java.util.ArrayList;
@@ -92,6 +93,20 @@ public abstract class FeatureDiagram implements FMSampleCountEnum {
    */
   // public abstract void addConstraints(final MiniSat sat, final StringIntLink link);
   // TODO maybe later
+
+  /**
+   * Returns a map containing for every feature, the number of configurations satisfying the feature diagram containing this feature
+   */
+  public Map<Feature,BigInteger> countSolutionsPerFeature(final boolean onlyLeaves) {
+    final Map<Feature,BigInteger> map = new HashMap<Feature,BigInteger>();
+    countSolutionsPerFeatureRec(map, BigInteger.ONE, onlyLeaves);
+    return map;
+  }
+
+  /**
+   * Recursively fill the map `solsPerFeature`. `factor` is the factor from the recursive calls to directly have the right count at the bottom of the tree.
+   */
+  protected abstract void countSolutionsPerFeatureRec(final Map<Feature,BigInteger> solsPerFeature, final BigInteger factor, final boolean onlyLeaves);
 
   
   public abstract BigInteger countAssigned(final List<MiniSat.Boolean> assignment, final StringIntLink link);

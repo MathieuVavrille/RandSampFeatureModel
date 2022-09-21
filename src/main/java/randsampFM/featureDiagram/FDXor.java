@@ -134,6 +134,14 @@ public final class FDXor extends FeatureDiagram{
       }
     }
   }
+
+  @Override
+  protected void countSolutionsPerFeatureRec(final Map<Feature,BigInteger> solsPerFeature, final BigInteger factor, final boolean onlyLeaves) {
+    BigInteger selfCount = count();
+    if (!onlyLeaves)
+      solsPerFeature.put(label, selfCount.multiply(factor));
+    children.stream().forEach(child -> child.countSolutionsPerFeatureRec(solsPerFeature, factor, onlyLeaves)); // See formulas to understand this
+  }
   
   @Override
   public BigInteger count() {

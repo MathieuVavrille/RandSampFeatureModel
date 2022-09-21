@@ -39,7 +39,7 @@ public class UVLParser {
           featureTree.add(pl);
         }
         else if (isConstraints) {
-          crossConstraints.add(line.substring(pl.getIndentation()));
+          crossConstraints.add(line.trim());//substring(pl.getIndentation()));
         }
       }
     }

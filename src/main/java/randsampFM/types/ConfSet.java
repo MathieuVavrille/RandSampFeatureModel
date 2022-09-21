@@ -54,6 +54,10 @@ public class ConfSet {
     return new ConfSet(Set.of(new Configuration()));
   }
 	
+  public Set<Configuration> getInnerSetPtr(){
+    return innerSet;
+  }
+	
   public Set<Configuration> getInnerSet(){
     return Set.copyOf(innerSet);
   }

@@ -222,6 +222,10 @@ public class FeatureModel implements FMSampleCountEnum {
     return featureDiagram;
   }
 
+  public List<CrossConstraint> getCrossConstraints() {
+    return crossConstraints;
+  }
+
   public StringIntLink getSiLink() {
     return siLink;
   }

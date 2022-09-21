@@ -182,6 +182,15 @@ public final class FDMandOpt extends FeatureDiagram {
   }
 
   @Override
+  protected void countSolutionsPerFeatureRec(final Map<Feature,BigInteger> solsPerFeature, final BigInteger factor, final boolean onlyLeaves) {
+    BigInteger selfCount = count();
+    if (!onlyLeaves)
+      solsPerFeature.put(label, selfCount.multiply(factor));
+    mandChildren.stream().forEach(mand -> mand.countSolutionsPerFeatureRec(solsPerFeature, factor.multiply(selfCount.divide(mand.count())), onlyLeaves));
+    optChildren.stream().forEach(opt -> opt.countSolutionsPerFeatureRec(solsPerFeature, factor.multiply(selfCount.divide(opt.count().add(BigInteger.ONE))), onlyLeaves)); // See formulas to understand this
+  }
+
+  @Override
   public BigInteger count() {
     if(this.nbConfigurations == null) {
       BigInteger optCount;
