@@ -13,7 +13,6 @@ import org.chocosolver.solver.search.strategy.Search;
 import org.chocosolver.solver.variables.BoolVar;
 
 import org.javatuples.Pair;
-import org.javatuples.Triplet;
 
 
 import java.util.Map;
@@ -28,39 +27,99 @@ import java.util.List;
 import java.util.ArrayList;
 import java.math.BigInteger;
 import java.util.Comparator;
+//import java.util.Comparator;
 import java.util.stream.Collectors;
 
 public class TestMain {
 
   public static void main(String[] args) {
     //assertCounts();
-    testPerSolutionCombination("./models/jhipster.uvl");
+    testMinDiffFrequency("./models/ovm_MPPL.ovm.uvl");
   }
+
+  private static void testMinDiffFrequency(final String path) {
+    long startTime = System.nanoTime();
+    FeatureModel fm = FeatureModel.parse(path);
+    System.out.println(fm.toUVL());
+    List<Map<Feature,Boolean>> solutions = new ArrayList<Map<Feature,Boolean>>();
+    Map<Feature,BigInteger> totalSolsPerFeature = fm.getFeatureDiagram().countSolutionsPerFeature(false);
+    final Map<Feature,BoolVar> featureToVar = new HashMap<Feature,BoolVar>();
+    Model model = generateModel(fm, featureToVar);
+    Solver solver = model.getSolver();
+    BestFrequencyStrategy strat = new BestFrequencyStrategy(solutions, totalSolsPerFeature, fm.getFeatureDiagram().count(), featureToVar);
+    solver.plugMonitor(strat);
+    solver.setSearch(Search.inputOrderUBSearch(model.retrieveIntVars(true)));//strat);
+    solver.setRestartOnSolutions();
+    solver.setNoGoodRecordingFromSolutions(model.retrieveIntVars(true));
+    int solCpt = 0;
+    while (solCpt < 100 && solver.solve()) {
+      solCpt++;
+    }
+    List<Feature> features = featureToVar.entrySet().stream().map(e -> e.getKey()).collect(Collectors.toList());
+    //System.out.println(features);
+    try {
+      FileWriter myWriter = new FileWriter("test.sols");
+      for (int i = 0; i < solutions.size(); i++) {
+        myWriter.write(i + ",");
+        for (int j = 0; j < features.size(); j++)
+          myWriter.write((solutions.get(i).get(features.get(j)) ? " " : " -") + (j+1));
+        myWriter.write("\n");
+      }
+      myWriter.close();
+    }
+    catch (IOException e) {
+      System.out.println("Cannot write to file");
+    }
+  }
+  
+  
+
+
+
+
+
+
+
+
+
+  
 
   private static void testPerSolutionCombination(final String path) {
     long startTime = System.nanoTime();
     FeatureModel fm = FeatureModel.parse(path);
     List<Map<Feature,Boolean>> solutions = new ArrayList<Map<Feature,Boolean>>();
-    Map<Feature,BigInteger> solsPerFeature = fm.getFeatureDiagram().countSolutionsPerFeature(true);
-    List<Triplet<BigInteger,Feature,Boolean>> featuresTruthSorted = sortFeaturesByCount(solsPerFeature, fm.getFeatureDiagram().count());
+    Map<Feature,BigInteger> solsPerFeature = fm.getFeatureDiagram().countSolutionsPerFeature(false);
+    FeatureWiseCombinations.setFeatures(fm.getFeatureDiagram().getFeatures().stream().collect(Collectors.toList()));
+    List<Pair<Feature,Boolean>> featuresTruthSorted = sortFeaturesByCount(solsPerFeature, fm.getFeatureDiagram().count());
     System.out.println(featuresTruthSorted);
-    for (Triplet<BigInteger,Feature,Boolean> featureTruth : featuresTruthSorted) {
-      completeFeatureWiseCoverage(solutions, featureTruth.getValue1(), featureTruth.getValue2(), fm);
+    System.out.println(solsPerFeature);
+    // Feature-wise coverage
+    FeatureWiseCombinations impossibleFeatures = completeFeatureWiseCoverage(solutions, new ArrayList<Map<Feature,Boolean>>(), new ArrayList<Pair<Feature,Boolean>>(), new FeatureWiseCombinations(), featuresTruthSorted, fm);
+    System.out.println("IMPOSSIBLE FEATURES " + impossibleFeatures);
+    System.out.println("SOLUTIONS SIZE AFTER FEATUREWISE " + solutions.size());
+    Map<Pair<Feature,Boolean>, FeatureWiseCombinations> featureToImpossible = new HashMap<Pair<Feature,Boolean>, FeatureWiseCombinations>();
+    for (Pair<Feature,Boolean> featureTruth : featuresTruthSorted) {
+      featureToImpossible.put(featureTruth, completeFeatureWiseCoverage(solutions, restrictSolutions(solutions, featureTruth.getValue0(), featureTruth.getValue1()), List.of(featureTruth), new FeatureWiseCombinations(), featuresTruthSorted, fm));
     }
+    //System.out.println("FEATURE TO IMPOSSIBLE " + featureToImpossible);
+    System.out.println("SOLUTIONS SIZE AFTER PAIRWISE " + solutions.size());
+    twiseCoverage(3, solutions, impossibleFeatures, featureToImpossible, featuresTruthSorted, fm);
     System.out.println(solutions.size());
     System.out.println((System.nanoTime()-startTime)/1000000);
   }
 
-  private static List<Triplet<BigInteger,Feature,Boolean>> sortFeaturesByCount(final Map<Feature,BigInteger> solsPerFeature, final BigInteger total) {
-    List<Triplet<BigInteger,Feature,Boolean>> sorted = new ArrayList<Triplet<BigInteger,Feature,Boolean>>();
+  private static List<Pair<Feature,Boolean>> sortFeaturesByCount(final Map<Feature,BigInteger> solsPerFeature, final BigInteger total) {
+    List<Pair<Feature,Boolean>> sorted = new ArrayList<Pair<Feature,Boolean>>();
     int cpt = 0;
     for (Map.Entry<Feature,BigInteger> entry : solsPerFeature.entrySet()) {
       if (!entry.getValue().equals(total)) {
-        sorted.add(new Triplet<BigInteger,Feature,Boolean>(entry.getValue(), entry.getKey(), true));
-        sorted.add(new Triplet<BigInteger,Feature,Boolean>(total.subtract(entry.getValue()), entry.getKey(), false));
+        if (!entry.getValue().equals(BigInteger.ZERO))
+          sorted.add(new Pair<Feature,Boolean>(entry.getKey(), true));
+        if (!entry.getValue().equals(total))
+          sorted.add(new Pair<Feature,Boolean>(entry.getKey(), false));
       }
     }
-    sorted.sort(Comparator.naturalOrder());
+    sorted.sort(Comparator.comparing(p -> p.getValue1() ? solsPerFeature.get(p.getValue0()) : total.subtract(solsPerFeature.get(p.getValue0()))));
     return sorted;
   }
 
@@ -72,53 +131,80 @@ public class TestMain {
     return model;
   }
 
-  private static Map<Feature, Pair<CombinationStatus,CombinationStatus>> extractCombinations(final List<Map<Feature,Boolean>> solutions, final Feature mainFeature, final boolean value, final Map<Feature,BoolVar> featureToVar) {
-    List<Map<Feature,Boolean>> restrictedSolutions = solutions.stream().filter(sol -> sol.get(mainFeature) == value).collect(Collectors.toList());
-    Map<Feature, Pair<CombinationStatus,CombinationStatus>> combinations = new HashMap<Feature, Pair<CombinationStatus,CombinationStatus>>();
-    for (Map.Entry<Feature, BoolVar> entry : featureToVar.entrySet()) {
-      combinations.put(entry.getKey(), statusFromSolutionsAndPropagatedVar(restrictedSolutions, entry.getValue(), entry.getKey()));
-    }
-    return combinations;
+  private static List<Map<Feature,Boolean>> restrictSolutions(final List<Map<Feature,Boolean>> solutions, final Feature mainFeature, final boolean value) {
+    return solutions.stream().filter(sol -> sol.get(mainFeature) == value).collect(Collectors.toList());
   }
 
-  private static Pair<CombinationStatus,CombinationStatus> statusFromSolutionsAndPropagatedVar(final List<Map<Feature,Boolean>> solutions, final BoolVar var, final Feature feature) {
-    boolean hasFalse = false;
-    boolean hasTrue = false;
-    for (int i = 0; i < solutions.size() && !(hasFalse && hasTrue); i++) {
-      if (solutions.get(i).get(feature))
-        hasTrue = true;
-      else
-        hasFalse = true;
+  private static FeatureWiseCombinations extractSeenCombinations(final List<Map<Feature,Boolean>> restrictedSolutions, final Map<Feature,BoolVar> featureToVar) {
+    FeatureWiseCombinations seenCombinations = new FeatureWiseCombinations();
+    for (Map<Feature,Boolean> solution : restrictedSolutions) {
+      for (Map.Entry<Feature,Boolean> entry : solution.entrySet())
+        seenCombinations.set(entry.getKey(), entry.getValue());
     }
-    return new Pair<CombinationStatus,CombinationStatus>(hasFalse ? CombinationStatus.FOUND : (var.contains(0) ? CombinationStatus.UNSEEN : CombinationStatus.IMPOSSIBLE), hasTrue ? CombinationStatus.FOUND : (var.contains(1) ? CombinationStatus.UNSEEN : CombinationStatus.IMPOSSIBLE));
+    return seenCombinations;
   }
-
 
   
-  private static void completeFeatureWiseCoverage(final List<Map<Feature,Boolean>> solutions, final Feature mainFeature, final boolean truthValue, final FeatureModel fm) {
+  private static FeatureWiseCombinations completeFeatureWiseCoverage(final List<Map<Feature,Boolean>> solutions, final List<Map<Feature,Boolean>> restrictedSolutions, final List<Pair<Feature,Boolean>> fixedFeatures, final FeatureWiseCombinations impossibleFeatures, final List<Pair<Feature,Boolean>> featuresTruthSorted, final FeatureModel fm) {
     int startingSolutionSize = solutions.size();
-    System.out.println("\nStart new Feature-Wise coverage with feature " + mainFeature + " and value " + truthValue);
+    System.out.println("\nFIXED = " + fixedFeatures);
+    System.out.println("RESTRICTED SOLUTIONS SIZE " + restrictedSolutions.size());
+    //System.out.println("\nStart new Feature-Wise coverage with feature " + mainFeature + " and value " + truthValue);
     final Map<Feature,BoolVar> featureToVar = new HashMap<Feature,BoolVar>();
     Model model = generateModel(fm, featureToVar);
-    featureToVar.get(mainFeature).eq(truthValue ? 1 : 0).post();
-    List<Feature> allFeatures = featureToVar.entrySet().stream().map(s -> s.getKey()).collect(Collectors.toList());
+
+    // fix features from the selected features, or the impossible ones
+    for (Pair<Feature,Boolean> fixed : fixedFeatures)
+      featureToVar.get(fixed.getValue0()).eq(fixed.getValue1() ? 1 : 0).post();
+    //impossibleFeatures.setVariables(featureToVar);
+
     Solver solver = model.getSolver();
+    // Propagate once to reduce possible combinations
     try {
       solver.propagate();
     } catch (Exception e) {
-      return; // Propagation found a contradiction, no solution
+      return new FeatureWiseCombinations(true); // Propagation found a contradiction, no solution
     }
-    Map<Feature, Pair<CombinationStatus,CombinationStatus>> combinations = extractCombinations(solutions, mainFeature, truthValue, featureToVar);
-    solver.plugMonitor(new CombinationHistoryMonitor(solutions, combinations, featureToVar));
-    solver.setSearch(new FeatureWiseCoverageStrategy(model, combinations, featureToVar), Search.defaultSearch(model));
+    FeatureWiseCombinations seenCombinations = extractSeenCombinations(restrictedSolutions, featureToVar);
+    for (Map.Entry<Feature,BoolVar> entry : featureToVar.entrySet()) {
+      if (entry.getValue().isInstantiated())
+        impossibleFeatures.set(entry.getKey(), entry.getValue().getValue()==0);
+    }
+    
+    solver.plugMonitor(new CombinationHistoryMonitor(solutions, seenCombinations, featureToVar));
+    solver.setSearch(new FeatureWiseCoverageStrategy(model, seenCombinations, impossibleFeatures, featureToVar, featuresTruthSorted), Search.defaultSearch(model));
     solver.setRestartOnSolutions();
-    //System.out.println(combinations);
+    
     while (solver.solve()) {
-      //System.out.println("");
-      //System.out.println(solutions.get(solutions.size()-1));
-      //System.out.println(combinations);
+      System.out.println(solutions.get(solutions.size()-1));
     }
     System.out.println((solutions.size()-startingSolutionSize) + " new solutions");
+    return impossibleFeatures;
+  }
+
+  private static void twiseCoverage(final int t, final List<Map<Feature,Boolean>> solutions, final FeatureWiseCombinations impossibleFeatures, final Map<Pair<Feature,Boolean>,FeatureWiseCombinations> featureToImpossible, final List<Pair<Feature,Boolean>> featuresTruthSorted, final FeatureModel fm) {
+    twiseCoverageRec(t, 0, solutions, solutions, new ArrayList<Pair<Feature,Boolean>>(), impossibleFeatures, featureToImpossible, featuresTruthSorted, fm);
+  }
+
+  private static void twiseCoverageRec(final int t, final int minId, final List<Map<Feature,Boolean>> solutions, final List<Map<Feature,Boolean>> restrictedSolutions, final List<Pair<Feature,Boolean>> fixedFeatures, final FeatureWiseCombinations impossibleFeatures, final Map<Pair<Feature,Boolean>,FeatureWiseCombinations> featureToImpossible, final List<Pair<Feature,Boolean>> featuresTruthSorted, final FeatureModel fm) {
+    if (t == 1) {
+      System.out.println(fixedFeatures);
+      completeFeatureWiseCoverage(solutions, restrictedSolutions, fixedFeatures, impossibleFeatures, featuresTruthSorted, fm);
+    }
+    else {
+      for (int currentId = minId; currentId < featuresTruthSorted.size()-t+2; currentId++) {
+        Feature currentFeature = featuresTruthSorted.get(currentId).getValue0();
+        boolean truthValue = featuresTruthSorted.get(currentId).getValue1();
+        //System.out.println(fixedFeatures + " " +  currentFeature + " " + impossibleFeatures.contains(currentFeature, truthValue));
+        if (!(impossibleFeatures.contains(currentFeature, false) || impossibleFeatures.contains(currentFeature, true))) {
+          FeatureWiseCombinations currentImpossibleFeatures = impossibleFeatures.unionNew(featureToImpossible.get(featuresTruthSorted.get(currentId)));
+          List<Map<Feature,Boolean>> newRestrictedSolutions = restrictSolutions(restrictedSolutions, currentFeature, truthValue);
+          fixedFeatures.add(featuresTruthSorted.get(currentId));
+          twiseCoverageRec(t-1, currentId+1, solutions, newRestrictedSolutions, fixedFeatures, currentImpossibleFeatures, featureToImpossible, featuresTruthSorted, fm);
+          fixedFeatures.remove(fixedFeatures.size()-1);
+        }
+      }
+    }
   }
 
 }

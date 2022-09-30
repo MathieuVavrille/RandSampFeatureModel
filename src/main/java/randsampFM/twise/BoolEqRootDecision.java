@@ -11,28 +11,28 @@ import org.javatuples.Pair;
 
 import java.util.Map;
 
-public class IntEqRootDecision extends Decision<BoolVar> {
+public class BoolEqRootDecision extends Decision<BoolVar> {
 
   private final BoolVar var;
   private final boolean value;
 
   private final Feature feature;
-  private final Map<Feature, Pair<CombinationStatus, CombinationStatus>> combinations;
+  private final FeatureWiseCombinations impossibleCombinations;
 
   private final IStateBool isFirstDecision;
   
-  public IntEqRootDecision(final BoolVar var, final boolean value, final IStateBool isFirstDecision, final Feature feature, final Map<Feature, Pair<CombinationStatus, CombinationStatus>> combinations) {
+  public BoolEqRootDecision(final BoolVar var, final boolean value, final IStateBool isFirstDecision, final Feature feature, final FeatureWiseCombinations impossibleCombinations) {
     super(2);
     this.var = var;
     this.value = value;
     this.isFirstDecision = isFirstDecision;
     this.feature = feature;
-    this.combinations = combinations;
+    this.impossibleCombinations = impossibleCombinations;
   }
 
   @Override
-  public Integer getDecisionValue() {
-    return value ? 1 : 0;
+  public Boolean getDecisionValue() {
+    return value;
   }
 
   @Override
@@ -45,16 +45,8 @@ public class IntEqRootDecision extends Decision<BoolVar> {
         var.setToFalse(this);
       isFirstDecision.set(false);
     } else if (branch == 2) {
-      if (value) {
-        var.eq(0).post();
-        CombinationStatus other = combinations.get(feature).getValue0();
-        combinations.put(feature, new Pair<CombinationStatus, CombinationStatus>(other, CombinationStatus.IMPOSSIBLE));
-      }
-      else {
-        var.eq(1).post();
-        CombinationStatus other = combinations.get(feature).getValue0();
-        combinations.put(feature, new Pair<CombinationStatus, CombinationStatus>(CombinationStatus.IMPOSSIBLE, other));
-      }
+      var.eq(value ? 0 : 1).post();
+      impossibleCombinations.set(feature, value);
       isFirstDecision.set(true);
     }
   }

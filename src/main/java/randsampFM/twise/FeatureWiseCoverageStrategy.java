@@ -3,40 +3,50 @@ package randsampFM.twise;
 import randsampFM.types.Feature;
 
 import org.chocosolver.memory.IStateBool;
+import org.chocosolver.memory.IStateInt;
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.search.strategy.decision.Decision;
 import org.chocosolver.solver.search.strategy.strategy.AbstractStrategy;
 import org.chocosolver.solver.variables.BoolVar;
 
 import org.javatuples.Pair;
+import org.javatuples.Triplet;
 
+import java.util.List;
 import java.util.Map;
 
 public class FeatureWiseCoverageStrategy extends AbstractStrategy<BoolVar> {
 
-
-  private final Map<Feature, Pair<CombinationStatus, CombinationStatus>> combinations;
+  private final FeatureWiseCombinations seenCombinations;
+  private final FeatureWiseCombinations impossibleCombinations;
   private final Map<Feature, BoolVar> featureToVar;
+  private final List<Pair<Feature, Boolean>> featureTruthSorted;
+  
   private final IStateBool isFirstDecision;
+  private int firstInterestingCombination = 0;
+  private final IStateInt backtrackableFirstCombination;
 
-  private final boolean startWithPositiveLiteral = true;
-
-
-  public FeatureWiseCoverageStrategy(final Model model, final Map<Feature, Pair<CombinationStatus, CombinationStatus>> combinations, final Map<Feature, BoolVar> featureToVar) {
-    this.combinations = combinations;
+  public FeatureWiseCoverageStrategy(final Model model, final FeatureWiseCombinations seenCombinations, final FeatureWiseCombinations impossibleCombinations, final Map<Feature, BoolVar> featureToVar, final List<Pair<Feature, Boolean>> featureTruthSorted) {
+    this.seenCombinations = seenCombinations;
+    this.impossibleCombinations = impossibleCombinations;
     this.featureToVar = featureToVar;
     this.isFirstDecision = model.getEnvironment().makeBool(true);
+    this.backtrackableFirstCombination = model.getEnvironment().makeInt(firstInterestingCombination);
+    this.featureTruthSorted = featureTruthSorted;
   }
   
 
   @Override
   public Decision<BoolVar> getDecision() {
+    if (isFirstDecision.get())
+      backtrackableFirstCombination.set(firstInterestingCombination);
     Pair<Feature,Boolean> chosenCombination = getUnseenCombination();
     if (isFirstDecision.get()) {
+      firstInterestingCombination = backtrackableFirstCombination.get();
       if (chosenCombination == null)
         return new FailDecision(getOneVar());
       else
-        return new IntEqRootDecision(featureToVar.get(chosenCombination.getValue0()), chosenCombination.getValue1(), isFirstDecision, chosenCombination.getValue0(), combinations);
+        return new BoolEqRootDecision(featureToVar.get(chosenCombination.getValue0()), chosenCombination.getValue1(), isFirstDecision, chosenCombination.getValue0(), impossibleCombinations);
     }
     else {
       if (chosenCombination == null)
@@ -54,23 +64,18 @@ public class FeatureWiseCoverageStrategy extends AbstractStrategy<BoolVar> {
   }
 
   private Pair<Feature,Boolean> getUnseenCombination() {
-    for (Map.Entry<Feature, Pair<CombinationStatus, CombinationStatus>> entry : combinations.entrySet()) {
-      if (!featureToVar.get(entry.getKey()).isInstantiated()) {
-        if (startWithPositiveLiteral) {
-          if (entry.getValue().getValue1() == CombinationStatus.UNSEEN)
-            return new Pair<Feature,Boolean>(entry.getKey(), true);
-          else if (entry.getValue().getValue0() == CombinationStatus.UNSEEN)
-            return new Pair<Feature,Boolean>(entry.getKey(), false);
-        }
-        else {
-          if (entry.getValue().getValue0() == CombinationStatus.UNSEEN)
-            return new Pair<Feature,Boolean>(entry.getKey(), false);
-          else if (entry.getValue().getValue1() == CombinationStatus.UNSEEN)
-            return new Pair<Feature,Boolean>(entry.getKey(), true);
-        }
+    int i = backtrackableFirstCombination.get();
+    while (i < featureTruthSorted.size()) {
+      Feature currentFeature = featureTruthSorted.get(i).getValue0();
+      boolean currentTruth = featureTruthSorted.get(i).getValue1();
+      if (!featureToVar.get(currentFeature).isInstantiated() && !seenCombinations.contains(currentFeature, currentTruth)) {
+        backtrackableFirstCombination.set(i);
+        return new Pair<Feature,Boolean>(currentFeature, currentTruth);
       }
+      i++;
     }
-    return null; // No more combination with non instantiated variable
+    backtrackableFirstCombination.set(i);
+    return null;
   }
-
+  
 }

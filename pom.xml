@@ -72,7 +72,7 @@
             </descriptorRefs>
             <archive>
               <manifest>
-		<mainClass>randsampFM.MainWeights</mainClass>
+		<mainClass>randsampFM.MainHighestDiff</mainClass>
               </manifest>
             </archive>
           </configuration>

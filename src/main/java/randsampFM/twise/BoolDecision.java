@@ -24,15 +24,9 @@ public class BoolDecision extends Decision<BoolVar> {
   public void apply() throws ContradictionException {
     if (branch == 1) {
       var.getModel().getSolver().getEventObserver().pushDecisionLevel();
-      if (value)
-        var.setToTrue(this);
-      else
-        var.setToFalse(this);
+      var.instantiateTo(value ? 1 : 0, this);
     } else if (branch == 2) {
-      if (value)
-        var.setToFalse(this);
-      else
-        var.setToTrue(this);
+      var.instantiateTo(value ? 0 : 1, this);
     }
   }
 
