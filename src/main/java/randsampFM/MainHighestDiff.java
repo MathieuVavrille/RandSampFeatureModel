@@ -2,6 +2,7 @@ package randsampFM;
 
 import randsampFM.featureDiagram.FeatureDiagram;
 import randsampFM.twise.BestFrequencyStrategy;
+import randsampFM.twise.RandomFrequencyStrategy;
 import randsampFM.constraints.CrossConstraint;
 import randsampFM.types.Feature;
 
@@ -10,6 +11,7 @@ import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.search.limits.SolutionCounter;
 import org.chocosolver.solver.search.limits.TimeCounter;
+import org.chocosolver.solver.expression.discrete.relational.ReExpression;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -21,6 +23,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Random;
 import java.nio.file.Paths;
 import java.io.IOException;
 import java.io.FileWriter;
@@ -46,9 +49,17 @@ public final class MainHighestDiff implements Runnable {
 
   @Option(names = {"-t", "--time"}, required = false, description = "Time limit for each sample, in seconds. No limit by default")
   private long timeLimit = 0L;
+
+  @Option(names = {"-r", "--random"}, required = false, description = "Use the random strategy or not. By default it is not the random strategy")
+  private boolean isRandom = false;
+
+  @Option(names = {"-rs", "--random_seed"}, required = false, description = "The random seed used for the random instance. Default takes the processor time (System.nanoTime())")
+  private Long seed = null;
   
   @Override
   public void run() {
+    if (seed == null)
+      seed = System.nanoTime();
     long startTime = System.nanoTime();
     FeatureModel fm = FeatureModel.parse(inFile);
     long parseTime = System.nanoTime();
@@ -58,20 +69,27 @@ public final class MainHighestDiff implements Runnable {
     final Map<Feature,BoolVar> featureToVar = new HashMap<Feature,BoolVar>();
     Model model = generateModel(fm, featureToVar);
     Solver solver = model.getSolver();
-    BestFrequencyStrategy strat = new BestFrequencyStrategy(solutions, totalSolsPerFeature, fm.getFeatureDiagram().count(), featureToVar);
+    if (isRandom) {
+      RandomFrequencyStrategy strat = new RandomFrequencyStrategy(solutions, totalSolsPerFeature, fm.getFeatureDiagram().count(), featureToVar, new Random(seed));
+      solver.plugMonitor(strat);
+      solver.setSearch(strat);
+    }
+    else {
+      BestFrequencyStrategy strat = new BestFrequencyStrategy(solutions, totalSolsPerFeature, fm.getFeatureDiagram().count(), featureToVar);
     solver.plugMonitor(strat);
     solver.setSearch(strat);
+    } 
     solver.setRestartOnSolutions();
     solver.setNoGoodRecordingFromSolutions(model.retrieveIntVars(true));
     if (timeLimit == 0L)
       solver.findAllSolutions(new SolutionCounter(model, nbSamples));
     else
-      solver.findAllSolutions(new SolutionCounter(model, nbSamples), new TimeCounter(model, timeLimit*1000000000L))
+      solver.findAllSolutions(new SolutionCounter(model, nbSamples), new TimeCounter(model, timeLimit*1000000000L));
     long totalTime = System.nanoTime();
     List<Feature> features = featureToVar.entrySet().stream().map(e -> e.getKey()).collect(Collectors.toList());
     try {
       FileWriter myWriter = new FileWriter(outFile);
-      myWriter.write((parseTime - startTime) + " " + (countingTime-parseTime) + " " + (totalTime-countingTime)+"\n");
+      myWriter.write(solutions.size() + " " + (parseTime - startTime) + " " + (countingTime-parseTime) + " " + (totalTime-countingTime)+"\n");
       myWriter.write(features + "\n");
       for (int i = 0; i < solutions.size(); i++) {
         myWriter.write(i + ",");
@@ -94,8 +112,11 @@ public final class MainHighestDiff implements Runnable {
   private Model generateModel(final FeatureModel fm, final Map<Feature,BoolVar> featureToVar) {
     final Model model = new Model("Generated");
     fm.getFeatureDiagram().addConstraints(model, featureToVar).eq(1).post();
-    for (CrossConstraint cstr : fm.getCrossConstraints())
-      cstr.getCPConstraint(featureToVar).post();
+    for (CrossConstraint cstr : fm.getCrossConstraints()) {
+      ReExpression expr = cstr.getCPConstraint(featureToVar);
+      System.out.println(expr);
+      expr.eq(1).post();
+    }
     return model;
   }
 		

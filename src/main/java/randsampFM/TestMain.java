@@ -11,10 +11,11 @@ import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.search.strategy.Search;
 import org.chocosolver.solver.variables.BoolVar;
+import org.chocosolver.solver.search.limits.FailCounter;
 
 import org.javatuples.Pair;
 
-
+import java.util.Random;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Arrays;
@@ -32,15 +33,51 @@ import java.util.stream.Collectors;
 
 public class TestMain {
 
+  public static final Random random = new Random(97);
+
   public static void main(String[] args) {
     //assertCounts();
-    testMinDiffFrequency("./models/ovm_MPPL.ovm.uvl");
+    testRandomDiffFrequency("./models/automotive01.uvl");
   }
 
-  private static void testMinDiffFrequency(final String path) {
+  private static void testRandomDiffFrequency(final String path) {
     long startTime = System.nanoTime();
     FeatureModel fm = FeatureModel.parse(path);
-    System.out.println(fm.toUVL());
+    List<Map<Feature,Boolean>> solutions = new ArrayList<Map<Feature,Boolean>>();
+    Map<Feature,BigInteger> totalSolsPerFeature = fm.getFeatureDiagram().countSolutionsPerFeature(false);
+    final Map<Feature,BoolVar> featureToVar = new HashMap<Feature,BoolVar>();
+    Model model = generateModel(fm, featureToVar);
+    Solver solver = model.getSolver();
+    RandomFrequencyStrategy strat = new RandomFrequencyStrategy(solutions, totalSolsPerFeature, fm.getFeatureDiagram().count(), featureToVar, random);
+    solver.plugMonitor(strat);
+    solver.setSearch(strat);
+    solver.setRestartOnSolutions();
+    solver.setNoGoodRecordingFromSolutions(model.retrieveIntVars(true));
+    solver.setLubyRestart(50L, new FailCounter(model, 50), Integer.MAX_VALUE);
+    int solCpt = 0;
+    while (solCpt < 100 && solver.solve()) {
+      System.out.println(solCpt++);
+    }
+    List<Feature> features = featureToVar.entrySet().stream().map(e -> e.getKey()).collect(Collectors.toList());
+    //System.out.println(features);
+    try {
+      FileWriter myWriter = new FileWriter("test.sols");
+      for (int i = 0; i < solutions.size(); i++) {
+        myWriter.write(i + ",");
+        for (int j = 0; j < features.size(); j++)
+          myWriter.write((solutions.get(i).get(features.get(j)) ? " " : " -") + (j+1));
+        myWriter.write("\n");
+      }
+      myWriter.close();
+    }
+    catch (IOException e) {
+      System.out.println("Cannot write to file");
+    }
+  }
+
+  private static void testBestDiffFrequency(final String path) {
+    long startTime = System.nanoTime();
+    FeatureModel fm = FeatureModel.parse(path);
     List<Map<Feature,Boolean>> solutions = new ArrayList<Map<Feature,Boolean>>();
     Map<Feature,BigInteger> totalSolsPerFeature = fm.getFeatureDiagram().countSolutionsPerFeature(false);
     final Map<Feature,BoolVar> featureToVar = new HashMap<Feature,BoolVar>();
@@ -48,12 +85,12 @@ public class TestMain {
     Solver solver = model.getSolver();
     BestFrequencyStrategy strat = new BestFrequencyStrategy(solutions, totalSolsPerFeature, fm.getFeatureDiagram().count(), featureToVar);
     solver.plugMonitor(strat);
-    solver.setSearch(Search.inputOrderUBSearch(model.retrieveIntVars(true)));//strat);
+    solver.setSearch(strat);
     solver.setRestartOnSolutions();
     solver.setNoGoodRecordingFromSolutions(model.retrieveIntVars(true));
     int solCpt = 0;
     while (solCpt < 100 && solver.solve()) {
-      solCpt++;
+      System.out.println(++solCpt);
     }
     List<Feature> features = featureToVar.entrySet().stream().map(e -> e.getKey()).collect(Collectors.toList());
     //System.out.println(features);

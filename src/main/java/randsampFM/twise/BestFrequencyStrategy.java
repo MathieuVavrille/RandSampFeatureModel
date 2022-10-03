@@ -45,7 +45,7 @@ public class BestFrequencyStrategy extends AbstractStrategy<IntVar> implements I
 
   @Override
   public Decision<IntVar> getDecision() {
-    System.out.println(depth.get() + " getDecision");
+    //System.out.println(depth.get() + " getDecision");
     depth.set(depth.get()+1);
     BoolVar currentVariable = null;
     BigInteger currentDiffAbs = null;
@@ -60,7 +60,7 @@ public class BestFrequencyStrategy extends AbstractStrategy<IntVar> implements I
         currentTruth = diff.getValue().compareTo(BigInteger.ZERO) <= 0;
       }
     }
-    System.out.println(nbUninstantiated + " " + currentVariable + " " + currentTruth);
+    //System.out.println(nbUninstantiated + " " + currentVariable + " " + currentTruth);
     if (currentVariable != null)
       return makeIntDecision(currentVariable, currentTruth ? 1 : 0);//new BoolDecision(currentVariable, currentTruth);
     else
@@ -76,7 +76,7 @@ public class BestFrequencyStrategy extends AbstractStrategy<IntVar> implements I
     this.solutionSize = solutionSize.add(BigInteger.ONE);
     solutions.add(currentSolution);
     recomputeDifferences();
-    System.out.println(solutions.size());
+    //System.out.println(solutions.size());
   }
 
   private void recomputeDifferences() {

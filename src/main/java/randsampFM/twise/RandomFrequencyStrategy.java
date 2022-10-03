@@ -11,13 +11,13 @@ import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.variables.IntVar;
 
 
-
 import java.math.BigInteger;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.util.Random;
 
@@ -26,7 +26,7 @@ import java.util.Random;
 public class RandomFrequencyStrategy extends AbstractStrategy<IntVar> implements IMonitorSolution {
 
   private final List<Map<Feature,Boolean>> solutions;
-  private final Map<Feature,Double> featureFrequency;
+  private final Map<Feature,Double> featureFrequency; // theoretical frequency
   private final Map<Feature,BoolVar> featureToVar;
   private Map<Feature,Integer> foundSolsPerFeature;
   private Map<Feature,Double> frequencyDifference; // observed-theoretical
@@ -36,11 +36,10 @@ public class RandomFrequencyStrategy extends AbstractStrategy<IntVar> implements
   public RandomFrequencyStrategy(final List<Map<Feature,Boolean>> solutions, final Map<Feature,BigInteger> totalSolsPerFeature, final BigInteger totalCount, final Map<Feature,BoolVar> featureToVar, final Random random) {
     this.solutions = solutions;
     BigDecimal totalCountDouble = new BigDecimal(totalCount);
-    this.totalSolsPerFeature = totalSolsPerFeature.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> new BigDecimal(e.getValue()).divide(totalcount, RoundingMode.HALF_DOWN)));
-    this.totalCount = totalCount;
+    this.featureFrequency = totalSolsPerFeature.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> new BigDecimal(e.getValue()).divide(totalCountDouble, RoundingMode.HALF_DOWN).doubleValue()));
     this.featureToVar = featureToVar;
-    this.foundSolsPerFeature = totalSolsPerFeature.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), 0));
-    this.differenceToFrequency = totalSolsPerFeature.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), 1.));
+    this.foundSolsPerFeature = totalSolsPerFeature.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> 0));
+    this.frequencyDifference = totalSolsPerFeature.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> 1.));
     this.depth = getOneVar().getModel().getEnvironment().makeInt(0);
     this.random = random;
   }
@@ -51,8 +50,8 @@ public class RandomFrequencyStrategy extends AbstractStrategy<IntVar> implements
     //System.out.println(depth.get() + " getDecision");
     depth.set(depth.get()+1);
     List<Feature> uninstantiatedFeatures = new ArrayList<Feature>();
-    List<Double> absFrequency = new ArrayList<Feature>();
-    for (Map.Entry<Feature, BigInteger> diff : frequencyDifference.entrySet()) {
+    List<Double> absFrequency = new ArrayList<Double>();
+    for (Map.Entry<Feature, Double> diff : frequencyDifference.entrySet()) {
       if (!featureToVar.get(diff.getKey()).isInstantiated()) {
         uninstantiatedFeatures.add(diff.getKey());
         absFrequency.add(Math.abs(diff.getValue()));
@@ -63,7 +62,7 @@ public class RandomFrequencyStrategy extends AbstractStrategy<IntVar> implements
     List<Double> weights = weightFunction(absFrequency);
     int randomID = getRandomWeightedID(weights);
     Feature chosenFeature = uninstantiatedFeatures.get(randomID); 
-    return makeIntDecision(chosenFeature, frequencyDifference.get(chosenFeature) > 0 ? 0 : 1);
+    return makeIntDecision(featureToVar.get(chosenFeature), frequencyDifference.get(chosenFeature) > 0 ? 0 : 1);
     
   }
 
@@ -71,9 +70,9 @@ public class RandomFrequencyStrategy extends AbstractStrategy<IntVar> implements
     double sum = weights.stream().mapToDouble(e -> e).sum();
     if (sum == 0.)
       return random.nextInt(weights.size());
-    double rdValue = random.nextDouble(sum);
+    double rdValue = sum*random.nextDouble();
     int i = 0;
-    while (weights.get(i) > rdValue) {
+    while (weights.get(i) < rdValue) {
       rdValue -= weights.get(i);
       i++;
     }
@@ -96,7 +95,7 @@ public class RandomFrequencyStrategy extends AbstractStrategy<IntVar> implements
 
   private void recomputeDifferences() {
     for (Map.Entry<Feature,Double> theoretical : featureFrequency.entrySet())
-      this.differenceToFrequency.put(theoretical.getKey(), foundSolsPerFeature.get(theoretical.getKey())/((double) solutions.size()) - theoretical.getValue());
+      this.frequencyDifference.put(theoretical.getKey(), foundSolsPerFeature.get(theoretical.getKey())/((double) solutions.size()) - theoretical.getValue());
   }
   
   /** Returns one variable. There is no property, and it should only be used as a placeholder */
