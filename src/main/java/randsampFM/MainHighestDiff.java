@@ -50,17 +50,25 @@ public final class MainHighestDiff implements Runnable {
   @Option(names = {"-l", "--luby_restarts"}, required = false, description = "Luby restart frequency.")
   private long lubyRestarts = 50L;
 
+  // Parameters for FrequencyDiff
   @Option(names = {"--var_weight_exp"}, required = false, description = "Exponent on the variable weight during random choice. > 1. means that big weights are boosted, < 1. means that small weights are increased in comparison to big weights. Must be ]0, +inf[, default is 1.")
   private double varWeightExp = 1.;
-
   @Option(names = {"--val_weight_exp"}, required = false, description = "Exponent on the value weight during random choice. < 1. means that the ~logical~ choice is boosted (i.e. like the deterministic strategy), > 1. makes the choice closer to uniform (1/2 chance for one value, 1/2 chance for the other value). Must be ]0, +inf[, default is 1.")
   private double valWeightExp = 1.;
 
+  // Parameters for TableSampling
+  @Option(names = {"--table_nb_vars"}, required = false, description = "Number of variables in table (only used if -algo = table). Default is 2.")
+  private int tableNbVars = 2;
+  @Option(names = {"--table_pivot"}, required = false, description = "pivot value in TableSampling (only used if -algo = table). Default is 10.")
+  private int tablePivot = 10;
+  @Option(names = {"--table_proba"}, required = false, description = "Probability of tuple in table (only used if -algo = table). Default is 0.5.")
+  private double tableProba = 0.5;
+
+  @Option(names = {"-a", "--algo"}, required = false, description = "Algorithm to apply. It can be `frequency` for the FrequencyDiff strategy, `randomsearch` for the RandomSearch strategy, or `table` for TableSampling. By default it is `frequency`")
+  private String algorithm = "frequency";
+
   @Option(names = {"-t", "--time"}, required = false, description = "Time limit for each sample, in seconds. No limit by default")
   private long timeLimit = 0L;
-
-  @Option(names = {"-rdv", "--full_random"}, required = false, description = "Use the fully random strategy or not. By default it is not the fully random strategy. If set, the value and variable weights are irrelevant")
-  private boolean fullRandom = false;
 
   @Option(names = {"-v", "--verbose"}, required = false, description = "Verbosity level. By default do not print anything.")
   private boolean verbose = false;
@@ -114,6 +122,29 @@ public final class MainHighestDiff implements Runnable {
         myWriter.write(i + ",");
         for (int j = 0; j < features.size(); j++)
           myWriter.write((solutions.get(i).get(features.get(j)) ? " " : " -") + (j+1));
+        myWriter.write("\n");
+      }
+      myWriter.close();
+    }
+    catch (IOException e) {
+      System.out.println("Cannot write to file");
+    }
+  }
+
+  private void runTableSampling(final Solver solver, final Map<Feature,BoolVar> featureToVar) {
+    List<Feature> features = featureToVar.entrySet().stream().map(e -> e.getKey()).collect(Collectors.toList());
+    Stream<Solution> solStream = solver.tableSampling(tablePivot, tableNbVars, tableProba, new Random(seed));
+    List<Solution> solutions = solStream.limit(100).collect(Collectors.toList());
+    try {
+      FileWriter myWriter = new FileWriter("test.sols");
+      myWriter.write(solutions.size() + " " + (System.nanoTime() - startTime) + "\n");
+      myWriter.write("[]\n");// No list of times for table sampling
+      myWriter.write(features + "\n");
+      for (int i = 0; i < solutions.size(); i++) {
+        //System.out.println(solutions.get(i));
+        myWriter.write(i + ",");
+        for (int j = 0; j < features.size(); j++)
+          myWriter.write((solutions.get(i).getIntVal(featureToVar.get(features.get(j))) == 1 ? " " : " -") + (j+1));
         myWriter.write("\n");
       }
       myWriter.close();
