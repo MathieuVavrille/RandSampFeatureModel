@@ -53,6 +53,11 @@ public class LitteralCstr extends CrossConstraint {
   }
 
   @Override
+  public void postCPConstraint(final Map<Feature,BoolVar> featureToVar) {
+    featureToVar.get(litteral).eq(1).post();
+  }
+  
+  @Override
   public ReExpression getCPConstraint(final Map<Feature,BoolVar> featureToVar) {
     return featureToVar.get(litteral);
   }

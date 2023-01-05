@@ -1,8 +1,7 @@
 package randsampFM;
 
 import randsampFM.featureDiagram.FeatureDiagram;
-import randsampFM.twise.BestFrequencyStrategy;
-import randsampFM.twise.RandomFrequencyStrategy;
+import randsampFM.twise.*;
 import randsampFM.constraints.CrossConstraint;
 import randsampFM.types.Feature;
 
@@ -11,6 +10,7 @@ import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.search.limits.SolutionCounter;
 import org.chocosolver.solver.search.limits.TimeCounter;
+import org.chocosolver.solver.search.limits.FailCounter;
 import org.chocosolver.solver.expression.discrete.relational.ReExpression;
 
 import picocli.CommandLine;
@@ -41,17 +41,29 @@ public final class MainHighestDiff implements Runnable {
   @Option(names = {"-f", "--file"}, required = true, description = ".ulv file from which the feature model will be parsed.")
   private String inFile;
 	
-  @Option(names = {"-s", "--samples"}, required = false, description = "number of samples to draw.")
+  @Option(names = {"-o", "--outfile"}, required = true, description = "Output file where the samples will be saved.")
+  private String outFile;
+	
+  @Option(names = {"-s", "--samples"}, required = false, description = "Number of samples to draw.")
   private int nbSamples = 100;
 	
-  @Option(names = {"-o", "--outfile"}, required = true, description = "Output .json file where the weights will be saved.")
-  private String outFile;
+  @Option(names = {"-l", "--luby_restarts"}, required = false, description = "Luby restart frequency.")
+  private long lubyRestarts = 50L;
+
+  @Option(names = {"--var_weight_exp"}, required = false, description = "Exponent on the variable weight during random choice. > 1. means that big weights are boosted, < 1. means that small weights are increased in comparison to big weights. Must be ]0, +inf[, default is 1.")
+  private double varWeightExp = 1.;
+
+  @Option(names = {"--val_weight_exp"}, required = false, description = "Exponent on the value weight during random choice. < 1. means that the ~logical~ choice is boosted (i.e. like the deterministic strategy), > 1. makes the choice closer to uniform (1/2 chance for one value, 1/2 chance for the other value). Must be ]0, +inf[, default is 1.")
+  private double valWeightExp = 1.;
 
   @Option(names = {"-t", "--time"}, required = false, description = "Time limit for each sample, in seconds. No limit by default")
   private long timeLimit = 0L;
 
-  @Option(names = {"-r", "--random"}, required = false, description = "Use the random strategy or not. By default it is not the random strategy")
-  private boolean isRandom = false;
+  @Option(names = {"-rdv", "--full_random"}, required = false, description = "Use the fully random strategy or not. By default it is not the fully random strategy. If set, the value and variable weights are irrelevant")
+  private boolean fullRandom = false;
+
+  @Option(names = {"-v", "--verbose"}, required = false, description = "Verbosity level. By default do not print anything.")
+  private boolean verbose = false;
 
   @Option(names = {"-rs", "--random_seed"}, required = false, description = "The random seed used for the random instance. Default takes the processor time (System.nanoTime())")
   private Long seed = null;
@@ -69,18 +81,24 @@ public final class MainHighestDiff implements Runnable {
     final Map<Feature,BoolVar> featureToVar = new HashMap<Feature,BoolVar>();
     Model model = generateModel(fm, featureToVar);
     Solver solver = model.getSolver();
-    if (isRandom) {
-      RandomFrequencyStrategy strat = new RandomFrequencyStrategy(solutions, totalSolsPerFeature, fm.getFeatureDiagram().count(), featureToVar, new Random(seed));
-      solver.plugMonitor(strat);
-      solver.setSearch(strat);
+    SolutionTimeRecorder strat;
+    if (fullRandom) {
+      RandomSearch rdStrat = new RandomSearch(solutions, featureToVar, model.retrieveIntVars(true), new Random(seed));
+      solver.plugMonitor(rdStrat);
+      solver.setSearch(rdStrat);
+      strat = rdStrat;
     }
     else {
-      BestFrequencyStrategy strat = new BestFrequencyStrategy(solutions, totalSolsPerFeature, fm.getFeatureDiagram().count(), featureToVar);
-    solver.plugMonitor(strat);
-    solver.setSearch(strat);
-    } 
+      RandomFrequencyStrategy frStrat = new RandomFrequencyStrategy(solutions, totalSolsPerFeature, fm.getFeatureDiagram().count(), featureToVar, varWeightExp, valWeightExp, new Random(seed), verbose);
+      solver.plugMonitor(frStrat);
+      solver.setSearch(frStrat);
+      strat = frStrat;
+    }
     solver.setRestartOnSolutions();
     solver.setNoGoodRecordingFromSolutions(model.retrieveIntVars(true));
+    solver.setNoGoodRecordingFromRestarts();
+    solver.setLubyRestart(lubyRestarts, new FailCounter(model, lubyRestarts), Integer.MAX_VALUE);
+    strat.setStartTime();
     if (timeLimit == 0L)
       solver.findAllSolutions(new SolutionCounter(model, nbSamples));
     else
@@ -90,6 +108,7 @@ public final class MainHighestDiff implements Runnable {
     try {
       FileWriter myWriter = new FileWriter(outFile);
       myWriter.write(solutions.size() + " " + (parseTime - startTime) + " " + (countingTime-parseTime) + " " + (totalTime-countingTime)+"\n");
+      myWriter.write(strat.getSolutionTime() + "\n");
       myWriter.write(features + "\n");
       for (int i = 0; i < solutions.size(); i++) {
         myWriter.write(i + ",");
@@ -113,9 +132,7 @@ public final class MainHighestDiff implements Runnable {
     final Model model = new Model("Generated");
     fm.getFeatureDiagram().addConstraints(model, featureToVar).eq(1).post();
     for (CrossConstraint cstr : fm.getCrossConstraints()) {
-      ReExpression expr = cstr.getCPConstraint(featureToVar);
-      System.out.println(expr);
-      expr.eq(1).post();
+      cstr.postCPConstraint(featureToVar);
     }
     return model;
   }

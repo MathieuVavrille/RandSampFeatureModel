@@ -5,10 +5,10 @@ import randsampFM.constraints.*;
 import randsampFM.types.*;
 import randsampFM.splittedFM.*;
 import randsampFM.twise.*;
-import randsampFM.parser.UVLParser;
 
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
+import org.chocosolver.solver.Solution;
 import org.chocosolver.solver.search.strategy.Search;
 import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.search.limits.FailCounter;
@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.math.BigInteger;
 import java.util.Comparator;
 //import java.util.Comparator;
+import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
 public class TestMain {
@@ -36,8 +37,59 @@ public class TestMain {
   public static final Random random = new Random(97);
 
   public static void main(String[] args) {
-    //assertCounts();
-    testRandomDiffFrequency("./models/automotive01.uvl");
+    //testBestDiffFrequency("./models/jhipster.uvl");
+    String path = "./models/XSEngine.uvl";
+    long startTime = System.nanoTime();
+    System.out.println(path);
+    FeatureModel fm = FeatureModel.parse(path);
+    //List<Map<Feature,Boolean>> solutions = new ArrayList<Map<Feature,Boolean>>();
+    Map<Feature,BigInteger> totalSolsPerFeature = fm.getFeatureDiagram().countSolutionsPerFeature(false);
+    final Map<Feature,BoolVar> featureToVar = new HashMap<Feature,BoolVar>();
+    Model model = generateModel(fm, featureToVar);
+    Solver solver = model.getSolver();
+    List<Feature> features = featureToVar.entrySet().stream().map(e -> e.getKey()).collect(Collectors.toList());
+    Stream<Solution> solStream = solver.tableSampling(20, 3, 0.5, random);
+    List<Solution> solutions = solStream.limit(100).collect(Collectors.toList());
+    try {
+      FileWriter myWriter = new FileWriter("test.sols");
+      myWriter.write(solutions.size() + " " + (System.nanoTime() - startTime) + "\n");
+      myWriter.write(features + "\n");
+      for (int i = 0; i < solutions.size(); i++) {
+        //System.out.println(solutions.get(i));
+        myWriter.write(i + ",");
+        for (int j = 0; j < features.size(); j++)
+          myWriter.write((solutions.get(i).getIntVal(featureToVar.get(features.get(j))) == 1 ? " " : " -") + (j+1));
+        myWriter.write("\n");
+      }
+      myWriter.close();
+    }
+    catch (IOException e) {
+      System.out.println("Cannot write to file");
+    }
+  }
+
+  public static void run() {
+    FeatureModel fm = FeatureModel.parse("models/XSEngine.uvl");
+    System.out.println("here");
+    final Map<Feature,BoolVar> featureToVar = new HashMap<Feature,BoolVar>();
+    Model model = generateModel(fm, featureToVar);
+    /*long totalTime = System.nanoTime();
+    List<Feature> features = featureToVar.entrySet().stream().map(e -> e.getKey()).collect(Collectors.toList());
+    try {
+      FileWriter myWriter = new FileWriter(outFile);
+      myWriter.write(solutions.size() + " " + (parseTime - startTime) + " " + (countingTime-parseTime) + " " + (totalTime-countingTime)+"\n");
+      myWriter.write(strat.getSolutionTime() + "\n");
+      myWriter.write(features + "\n");
+      for (int i = 0; i < solutions.size(); i++) {
+        myWriter.write(i + ",");
+        for (int j = 0; j < features.size(); j++)
+          myWriter.write((solutions.get(i).get(features.get(j)) ? " " : " -") + (j+1));
+        myWriter.write("\n");
+      }
+      myWriter.close();
+    }
+    catch (IOException e) {
+    System.out.println("Cannot write to file");*/
   }
 
   private static void testRandomDiffFrequency(final String path) {
@@ -48,7 +100,7 @@ public class TestMain {
     final Map<Feature,BoolVar> featureToVar = new HashMap<Feature,BoolVar>();
     Model model = generateModel(fm, featureToVar);
     Solver solver = model.getSolver();
-    RandomFrequencyStrategy strat = new RandomFrequencyStrategy(solutions, totalSolsPerFeature, fm.getFeatureDiagram().count(), featureToVar, random);
+    RandomFrequencyStrategy strat = new RandomFrequencyStrategy(solutions, totalSolsPerFeature, fm.getFeatureDiagram().count(), featureToVar, 1., 1., random, true);
     solver.plugMonitor(strat);
     solver.setSearch(strat);
     solver.setRestartOnSolutions();
@@ -83,13 +135,13 @@ public class TestMain {
     final Map<Feature,BoolVar> featureToVar = new HashMap<Feature,BoolVar>();
     Model model = generateModel(fm, featureToVar);
     Solver solver = model.getSolver();
-    BestFrequencyStrategy strat = new BestFrequencyStrategy(solutions, totalSolsPerFeature, fm.getFeatureDiagram().count(), featureToVar);
+    BestFrequencyStrategy strat = new BestFrequencyStrategy(solutions, totalSolsPerFeature, fm.getFeatureDiagram().count(), featureToVar, true);
     solver.plugMonitor(strat);
-    solver.setSearch(strat);
-    solver.setRestartOnSolutions();
-    solver.setNoGoodRecordingFromSolutions(model.retrieveIntVars(true));
+    //solver.setSearch(strat);
+    //solver.setRestartOnSolutions();
+    //solver.setNoGoodRecordingFromSolutions(model.retrieveIntVars(true));
     int solCpt = 0;
-    while (solCpt < 100 && solver.solve()) {
+    while (solver.solve()) {
       System.out.println(++solCpt);
     }
     List<Feature> features = featureToVar.entrySet().stream().map(e -> e.getKey()).collect(Collectors.toList());
@@ -97,6 +149,7 @@ public class TestMain {
     try {
       FileWriter myWriter = new FileWriter("test.sols");
       for (int i = 0; i < solutions.size(); i++) {
+        //System.out.println(solutions.get(i));
         myWriter.write(i + ",");
         for (int j = 0; j < features.size(); j++)
           myWriter.write((solutions.get(i).get(features.get(j)) ? " " : " -") + (j+1));
@@ -163,8 +216,9 @@ public class TestMain {
   private static Model generateModel(final FeatureModel fm, final Map<Feature,BoolVar> featureToVar) {
     final Model model = new Model("Generated");
     fm.getFeatureDiagram().addConstraints(model, featureToVar).eq(1).post();
-    for (CrossConstraint cstr : fm.getCrossConstraints())
-      cstr.getCPConstraint(featureToVar).post();
+    for (CrossConstraint cstr : fm.getCrossConstraints()) {
+      cstr.postCPConstraint(featureToVar);
+    }
     return model;
   }
 

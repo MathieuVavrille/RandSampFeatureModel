@@ -39,6 +39,10 @@ public abstract class CrossConstraint {
   /** Returns all the variables of the constraint */
   public abstract Set<randsampFM.types.Feature> getVariables();
 
+
+  /** Posts the constraint in the solver */
+  public abstract void postCPConstraint(final Map<randsampFM.types.Feature,BoolVar> featureToVar);
+    
   /** Returns the ReExpression representing the crossConstraint */
   public abstract ReExpression getCPConstraint(final Map<randsampFM.types.Feature,BoolVar> featureToVar);
 

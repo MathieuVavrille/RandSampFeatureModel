@@ -30,6 +30,11 @@ public class TrueCstr extends CrossConstraint {
   }
 
   @Override
+  public void postCPConstraint(final Map<Feature,BoolVar> featureToVar) {
+    throw new IllegalStateException("The boolean constants should have been removed");
+  }
+
+  @Override
   public ReExpression getCPConstraint(final Map<Feature,BoolVar> featureToVar) {
     throw new IllegalStateException("The boolean constants should have been removed");
   }

@@ -30,8 +30,9 @@ public class BestFrequencyStrategy extends AbstractStrategy<IntVar> implements I
   private BigInteger solutionSize;
   private Map<Feature,BigInteger> differenceToFrequency; // Scaled by solutionSize*totalCount
   private final IStateInt depth;
+  private final boolean verbose;
 
-  public BestFrequencyStrategy(final List<Map<Feature,Boolean>> solutions, final Map<Feature,BigInteger> totalSolsPerFeature, final BigInteger totalCount, final Map<Feature,BoolVar> featureToVar) {
+  public BestFrequencyStrategy(final List<Map<Feature,Boolean>> solutions, final Map<Feature,BigInteger> totalSolsPerFeature, final BigInteger totalCount, final Map<Feature,BoolVar> featureToVar, final boolean verbose) {
     this.solutions = solutions;
     this.totalSolsPerFeature = totalSolsPerFeature;
     this.totalCount = totalCount;
@@ -40,6 +41,7 @@ public class BestFrequencyStrategy extends AbstractStrategy<IntVar> implements I
     this.solutionSize = BigInteger.ZERO;
     this.differenceToFrequency = totalSolsPerFeature.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> BigInteger.ZERO));
     this.depth = getOneVar().getModel().getEnvironment().makeInt(0);
+    this.verbose = verbose;
   }
   
 
@@ -76,7 +78,8 @@ public class BestFrequencyStrategy extends AbstractStrategy<IntVar> implements I
     this.solutionSize = solutionSize.add(BigInteger.ONE);
     solutions.add(currentSolution);
     recomputeDifferences();
-    //System.out.println(solutions.size());
+    if (verbose)
+      System.out.println(solutions.size());
   }
 
   private void recomputeDifferences() {

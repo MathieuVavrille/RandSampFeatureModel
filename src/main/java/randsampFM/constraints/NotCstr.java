@@ -14,10 +14,10 @@ import java.util.Set;
 import java.util.Map;
 
 public class NotCstr extends CrossConstraint {
-  private final CrossConstraint child;
+  private final Feature litteral;
   
-  private NotCstr(final CrossConstraint child) {
-    this.child = child;
+  private NotCstr(final Feature litteral) {
+    this.litteral = litteral;
   }
 
   public static CrossConstraint of(final CrossConstraint child) {
@@ -26,7 +26,7 @@ public class NotCstr extends CrossConstraint {
     else if (child instanceof FalseCstr)
       return new TrueCstr();
     else if (child instanceof NotCstr)
-      return ((NotCstr) child).child;
+      return new LitteralCstr(((NotCstr) child).litteral);
     else if (child instanceof AndCstr) {
       AndCstr andCstr = (AndCstr) child;
       return OrCstr.of(NotCstr.of(andCstr.left),NotCstr.of(andCstr.right));
@@ -35,61 +35,70 @@ public class NotCstr extends CrossConstraint {
       OrCstr orCstr = (OrCstr) child;
       return AndCstr.of(NotCstr.of(orCstr.left),NotCstr.of(orCstr.right));
     }
+    else if (child instanceof LitteralCstr) {
+      LitteralCstr litteralCstr = (LitteralCstr) child;
+      return new NotCstr(litteralCstr.getFeature());
+    }
     else
-      return new NotCstr(child);
+      throw new IllegalStateException("There is no more possibility of constraint.");
   }
 
   @Override
   public Pair<Boolean,CrossConstraint> fixVariable(final Set<Feature> forced, final Set<Feature> forbidden) {
-    Pair<Boolean, CrossConstraint> fix = child.fixVariable(forced,forbidden);
-    return new Pair<Boolean, CrossConstraint>(fix.getValue0(), NotCstr.of(fix.getValue1()));
+    if (forced.contains(litteral))
+      return new Pair<Boolean, CrossConstraint>(true, new FalseCstr());
+    else if (forbidden.contains(litteral))
+      return new Pair<Boolean, CrossConstraint>(true, new TrueCstr());
+    else
+      return new Pair<Boolean, CrossConstraint>(false, this);
   }
 
   @Override
   public boolean isSatisfied(final Configuration configuration) {
-    return !child.isSatisfied(configuration);
+    return !configuration.contains(litteral);
+  }
+
+  @Override
+  public void postCPConstraint(final Map<Feature,BoolVar> featureToVar) {
+    featureToVar.get(litteral).eq(0).post();
   }
 
   @Override
   public ReExpression getCPConstraint(final Map<Feature,BoolVar> featureToVar) {
-    return child.getCPConstraint(featureToVar).not();
+    return featureToVar.get(litteral).not();
   }
 
   @Override
   public List<Clause> getEquivalentClauses(final StringIntLink link) {
-    if (child instanceof LitteralCstr)
-      return new ArrayList<Clause>(List.of(Clause.ofFalseLit(link.getInt(((LitteralCstr) child).getFeature().getName()))));
-    else
-      throw new UnsupportedOperationException("Not implemented");
+    return new ArrayList<Clause>(List.of(Clause.ofFalseLit(link.getInt(litteral.getName()))));
   }
 
   @Override
   public Pair<Integer,Boolean> addTseitinClauses(final List<Clause> clauses, final StringIntLink link) {
-    final Pair<Integer,Boolean> childLit = child.addTseitinClauses(clauses, link);
-    return new Pair<Integer,Boolean>(childLit.getValue0(), !childLit.getValue1());
+    return new Pair<Integer,Boolean>(link.getInt(litteral.getName()),false);
   }
 
   @Override
   public Pair<Set<Feature>,Set<Feature>> forcedFeaturesForTrue() {
-    return child.forcedFeaturesForFalse();
+    return new Pair<Set<Feature>,Set<Feature>>(Set.of(),Set.of(litteral));
   }
   @Override
   public Pair<Set<Feature>,Set<Feature>> forcedFeaturesForFalse() {
-    return child.forcedFeaturesForTrue();
+    return new Pair<Set<Feature>,Set<Feature>>(Set.of(litteral),Set.of());
   }
 
   @Override
   public Set<Feature> getVariables() {
-    return child.getVariables();
+    return Set.of(litteral);
   }
 
   @Override
   public String toString() {
-    return "NOT("+child.toString()+")";
+    return "NOT("+litteral+")";
   }
 
   @Override
   public String toUVL() {
-    return "!"+child.toUVL();
+    return "!"+litteral;
   }
 }
